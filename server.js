@@ -64,7 +64,49 @@ app.get("/products/:id", (req, res) => {
     });
 });
 
-// # 3
+// # 3 Som kund vill jag kunna slutföra ett köp/lägga en order så att jag kan genomföra mina inköp
+app.post("/orders", (req, res) => {
+    const { customer_id, items } = req.body;
+
+    // 1) Valideringssteg
+    if (!customer_id || !items || items.length === 0) {
+        return res.status(400).send("customer_id och items krävs");
+    }
+
+    // 2) Skapa order (bara customer_id + datum)
+    db.query(
+        "INSERT INTO orders (customer_id, order_date) VALUES (?, NOW())",
+        [customer_id],
+        (err, orderResult) => {
+            if (err) return res.status(500).send(err);
+
+            const orderId = orderResult.insertId;
+
+            // 3) Skapa order_items-rader
+            const values = items.map((i) => [
+                orderId,
+                i.product_id,
+                i.quantity,
+            ]);
+
+            db.query(
+                "INSERT INTO order_items (order_id, product_id, quantity) VALUES ?",
+                [values],
+                (err2) => {
+                    if (err2) return res.status(500).send(err2);
+
+                    // 4) Svar
+                    res.status(201).json({
+                        message: "Order skapad!",
+                        order_id: orderId,
+                        customer_id,
+                        items,
+                    });
+                },
+            );
+        },
+    );
+});
 
 // # 4  Som kund vill jag kunna se mina tidigare ordrar så att jag har koll på min köphistorik
 app.get("/orders/:id", (req, res) => {
@@ -109,7 +151,6 @@ app.get("/products/search", async (req, res) => {
   `;
 
     const [rows] = await db.execute(sql, [search, search]);
-
     res.json(rows);
 });
 
