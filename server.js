@@ -32,7 +32,7 @@ db.connect((err) => {
     else console.log("Connected to MySQL");
 });
 
-/* ------------ENDPOINTS-------- */
+/* ------------ENDPOINTS KUND-PERSPEKTIV-------- */
 
 // #1 Som kund vill jag kunna se alla tillgängliga produkter så att jag kan bläddra i sortimentet
 
@@ -152,6 +152,26 @@ app.get("/products/search", async (req, res) => {
 
     const [rows] = await db.execute(sql, [search, search]);
     res.json(rows);
+});
+
+/* ------------ENDPOINTS ADMIN-PERSPEKTIV-------- */
+
+//#1 Som admin vill jag kunna lägga till nya produkter så att sortimentet kan växa
+app.post("/admin/products", (req, res) => {
+    const { product_name, product_description, price, sku, stock_quantity } =
+        req.body;
+
+    db.query(
+        "INSERT INTO products (product_name, product_description, price, sku, stock_quantity) VALUES (?, ?, ?, ?, ?)",
+        [product_name, product_description, price, sku, stock_quantity],
+        (err, result) => {
+            if (err) return res.status(500).json(err);
+            res.status(201).json({
+                message: "Produkt tillagd!",
+                product_id: result.insertId,
+            });
+        },
+    );
 });
 
 // ================= STARTA SERVERN =================
