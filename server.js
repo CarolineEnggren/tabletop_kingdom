@@ -235,10 +235,29 @@ app.patch("/admin/products/:id", (req, res) => {
         if (result.affectedRows === 0) {
             return res
                 .status(404)
-                .json({ message: "Produkten hittades inte." });
+                .send({ message: "Produkten hittades inte." });
         }
 
-        res.json({ message: "Produkt uppdaterad!" });
+        res.send({ message: "Produkt uppdaterad!" });
+    });
+});
+
+// #3 Som admin vill jag kunna ta bort produkter så att utgående produkter kan rensas bort
+app.delete("/admin/products/:id", (req, res) => {
+    const id = req.params.id;
+
+    const sql = "DELETE FROM products WHERE id = ?";
+
+    db.query(sql, [id], (err, result) => {
+        if (err) return res.status(500).json(err);
+
+        if (result.affectedRows === 0) {
+            return res
+                .status(404)
+                .send({ message: "Produkten hittades inte." });
+        }
+
+        res.status(200).send({ message: "Produkt borttagen!" });
     });
 });
 
