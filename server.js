@@ -261,6 +261,26 @@ app.delete("/admin/products/:id", (req, res) => {
     });
 });
 
+// #4 Som admin vill jag kunna se alla ordrar så att jag kan hantera verksamheten
+app.get("/admin/orders", (req, res) => {
+    const sql = `
+        SELECT 
+            o.id,
+            o.order_date,
+            o.total_amount,
+            c.first_name,
+            c.last_name
+        FROM orders o
+        JOIN customers c ON o.customer_id = c.id
+        ORDER BY o.order_date DESC
+    `;
+
+    db.query(sql, (err, results) => {
+        if (err) return res.status(500).send(err);
+        res.send(results);
+    });
+});
+
 // ================= STARTA SERVERN =================
 // listen betyder: börja lyssna på en port (t.ex. 3000)
 // utan app.listen kör servern inte och du kan inte anropa endpoints.
