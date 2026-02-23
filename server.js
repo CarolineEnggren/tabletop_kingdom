@@ -174,6 +174,74 @@ app.post("/admin/products", (req, res) => {
     );
 });
 
+// #2 Som admin vill jag kunna uppdatera produktinformation så att informationen hålls aktuell
+
+app.patch("/admin/products/:id", (req, res) => {
+    const id = req.params.id;
+    const updates = []; // Array som ska innehålla SQL-delar som "price = ?" osv. Vi fyller den bara med fält som faktiskt ska uppdateras
+    const values = []; //Array med själva värdena som ska ersätta ? i SQL-queryn. Dessa matchas i samma ordning som frågetecknen
+
+    // Kollar om frontend skickade ett nytt produktnamn
+    // !== undefined betyder "fältet finns med i requesten"
+    if (req.body.product_name !== undefined) {
+        updates.push("product_name = ?"); // Lägg till SQL-fragment för UPDATE-satsen
+        values.push(req.body.product_name); // Lägg till själva värdet som ska sättas i databasen
+    }
+
+    if (req.body.product_description !== undefined) {
+        updates.push("product_description = ?");
+        values.push(req.body.product_description);
+    }
+
+    if (req.body.price !== undefined) {
+        updates.push("price = ?");
+        values.push(req.body.price);
+    }
+
+    if (req.body.sku !== undefined) {
+        updates.push("sku = ?");
+        values.push(req.body.sku);
+    }
+
+    if (req.body.stock_quantity !== undefined) {
+        updates.push("stock_quantity = ?");
+        values.push(req.body.stock_quantity);
+    }
+
+    if (req.body.is_eol !== undefined) {
+        updates.push("is_eol = ?");
+        values.push(req.body.is_eol);
+    }
+
+    if (updates.length === 0) {
+        return res.status(400).json({ message: "Inga fält att uppdatera." });
+    }
+
+    // updates.join(", ") gör t.ex:
+    // ["price = ?", "stock_quantity = ?"]
+    // → "price = ?, stock_quantity = ?"
+    const sql = `
+        UPDATE products
+        SET ${updates.join(", ")}
+        WHERE id = ?
+    `;
+
+    // Lägg till id i slutet av values så det matchar det sista ? i SQL-frågan
+    values.push(id);
+
+    db.query(sql, values, (err, result) => {
+        if (err) return res.status(500).json(err);
+
+        if (result.affectedRows === 0) {
+            return res
+                .status(404)
+                .json({ message: "Produkten hittades inte." });
+        }
+
+        res.json({ message: "Produkt uppdaterad!" });
+    });
+});
+
 // ================= STARTA SERVERN =================
 // listen betyder: börja lyssna på en port (t.ex. 3000)
 // utan app.listen kör servern inte och du kan inte anropa endpoints.
