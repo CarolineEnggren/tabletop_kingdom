@@ -32,6 +32,19 @@ db.connect((err) => {
     else console.log("Connected to MySQL");
 });
 
+// ========== SESSIONHANTERING (kundvagn / inloggning) ==========
+
+// Importerar express-session, ett middleware som gör att servern
+// kan spara data per användare mellan flera HTTP-requests
+// Exempel: kundvagn, inloggningsstatus, användar-ID
+const session = require("express-session");
+app.use(session({
+ secret: process.env.SESSION_SECRET, // En hemlig nyckel som används för att signera session-cookien
+ resave: false,
+ saveUninitialized: true
+}));
+
+
 /* ------------ENDPOINTS KUND-PERSPEKTIV-------- */
 
 // #1 Som kund vill jag kunna se alla tillgängliga produkter så att jag kan bläddra i sortimentet
@@ -152,6 +165,69 @@ app.get("/products/search", async (req, res) => {
 
     const [rows] = await db.execute(sql, [search, search]);
     res.json(rows);
+});
+
+// Utökade funktioner kundperspektiv
+
+// #6 Som kund vill jag kunna lägga till produkter i varukorgen
+app.post("/cart/add", (req, res) => {
+const { product_id, quantity } = req.body;
+if (!req.session.cart) {
+req.session.cart = [];
+}
+req.session.cart.push({ product_id, quantity });
+res.json({ message: "Produkt tillagd i varukorgen!" });
+});
+
+// #7 Som kund vill jag kunna se min varukorg med totalpris
+app.get("/cart", (req, res) => {
+    // Om varukorgen inte finns eller är tom
+    if (!req.session.cart || req.session.cart.length === 0) {
+        return res.json({
+            cart: [],
+            totalPrice: 0
+        });
+    }
+
+    const cart = req.session.cart;
+
+    // Plocka ut alla produkt-id:n från varukorgen
+    const productIds = cart.map(item => item.product_id);
+
+    // Hämta produktinfo från databasen
+    const sql = `
+        SELECT id, product_name, price
+        FROM products
+        WHERE id IN (?)
+    `;
+
+    db.query(sql, [productIds], (err, products) => {
+        if (err) return res.status(500).json(err);
+
+        let totalPrice = 0;
+
+        // Bygg en snygg varukorg att skicka till frontend
+        // ---------------------------------------------Ska vi ha kvar den här biten?----------------- 
+        const detailedCart = cart.map(item => {
+            const product = products.find(p => p.id === item.product_id);
+
+            const itemTotal = product.price * item.quantity;
+            totalPrice += itemTotal;
+
+            return {
+                product_id: product.id,
+                product_name: product.product_name,
+                price: product.price,
+                quantity: item.quantity,
+                itemTotal
+            };
+        });
+
+        res.json({
+            cart: detailedCart,
+            totalPrice
+        });
+    });
 });
 
 /* ------------ENDPOINTS ADMIN-PERSPEKTIV-------- */
