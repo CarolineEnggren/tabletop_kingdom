@@ -179,6 +179,56 @@ req.session.cart.push({ product_id, quantity });
 res.json({ message: "Produkt tillagd i varukorgen!" });
 });
 
+// #7 Som kund vill jag kunna se min varukorg med totalpris
+app.get("/cart", (req, res) => {
+    // Om varukorgen inte finns eller är tom
+    if (!req.session.cart || req.session.cart.length === 0) {
+        return res.json({
+            cart: [],
+            totalPrice: 0
+        });
+    }
+
+    const cart = req.session.cart;
+
+    // Plocka ut alla produkt-id:n från varukorgen
+    const productIds = cart.map(item => item.product_id);
+
+    // Hämta produktinfo från databasen
+    const sql = `
+        SELECT id, product_name, price
+        FROM products
+        WHERE id IN (?)
+    `;
+
+    db.query(sql, [productIds], (err, products) => {
+        if (err) return res.status(500).json(err);
+
+        let totalPrice = 0;
+
+        // Bygg en snygg varukorg att skicka till frontend
+        // ---------------------------------------------Ska vi ha kvar den här biten?----------------- 
+        const detailedCart = cart.map(item => {
+            const product = products.find(p => p.id === item.product_id);
+
+            const itemTotal = product.price * item.quantity;
+            totalPrice += itemTotal;
+
+            return {
+                product_id: product.id,
+                product_name: product.product_name,
+                price: product.price,
+                quantity: item.quantity,
+                itemTotal
+            };
+        });
+
+        res.json({
+            cart: detailedCart,
+            totalPrice
+        });
+    });
+});
 
 /* ------------ENDPOINTS ADMIN-PERSPEKTIV-------- */
 
