@@ -32,6 +32,19 @@ db.connect((err) => {
     else console.log("Connected to MySQL");
 });
 
+// ========== SESSIONHANTERING (kundvagn / inloggning) ==========
+
+// Importerar express-session, ett middleware som gör att servern
+// kan spara data per användare mellan flera HTTP-requests
+// Exempel: kundvagn, inloggningsstatus, användar-ID
+const session = require("express-session");
+app.use(session({
+ secret: process.env.SESSION_SECRET, // En hemlig nyckel som används för att signera session-cookien
+ resave: false,
+ saveUninitialized: true
+}));
+
+
 /* ------------ENDPOINTS KUND-PERSPEKTIV-------- */
 
 // #1 Som kund vill jag kunna se alla tillgängliga produkter så att jag kan bläddra i sortimentet
@@ -153,6 +166,19 @@ app.get("/products/search", async (req, res) => {
     const [rows] = await db.execute(sql, [search, search]);
     res.json(rows);
 });
+
+// Utökade funktioner kundperspektiv
+
+// #6 Som kund vill jag kunna lägga till produkter i varukorgen
+app.post("/cart/add", (req, res) => {
+const { product_id, quantity } = req.body;
+if (!req.session.cart) {
+req.session.cart = [];
+}
+req.session.cart.push({ product_id, quantity });
+res.json({ message: "Produkt tillagd i varukorgen!" });
+});
+
 
 /* ------------ENDPOINTS ADMIN-PERSPEKTIV-------- */
 
