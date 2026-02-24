@@ -70,11 +70,11 @@ app.get("/products/:id", (req, res) => {
     const id = req.params.id;
 
     db.query("SELECT * FROM products WHERE id = ?", [id], (err, result) => {
-        if (err) return res.status(500).json(err);
+        if (err) return res.status(500).send(err);
         if (!result.length)
             return res.status(404).send("Produkten hittades inte");
 
-        res.json(result[0]);
+        res.send(result[0]);
     });
 });
 
@@ -110,7 +110,7 @@ app.post("/orders", (req, res) => {
                     if (err2) return res.status(500).send(err2);
 
                     // 4) Svar
-                    res.status(201).json({
+                    res.status(201).send({
                         message: "Order skapad!",
                         order_id: orderId,
                         customer_id,
@@ -140,10 +140,10 @@ app.get("/orders/:id", (req, res) => {
                 `;
 
     db.query(sql, [id], (err, result) => {
-        if (err) return res.status(500).json(err);
+        if (err) return res.status(500).send(err);
         if (!result.length) return res.status(404).send("Inga ordrar hittades");
 
-        res.json(result);
+        res.send(result);
     });
 });
 
@@ -258,6 +258,37 @@ app.delete("/cart/:product_id", (req, res) => {
     }
 
     res.send({ message: "Produkt borttagen från varukorgen!" });
+});
+
+// #9 Som kund vill jag kunna se om en produkt finns i lager
+app.get("/products/:id/stock", (req, res) => {
+    const id = req.params.id;
+
+    const sql = `
+        SELECT 
+            product_name,
+            stock_quantity
+        FROM products
+        WHERE id = ?
+    `;
+
+    db.query(sql, [id], (err, results) => {
+        if (err) return res.status(500).send(err);
+
+        if (results.length === 0) {
+            return res
+                .status(404)
+                .send({ message: "Produkten hittades inte." });
+        }
+
+        const product = results[0];
+
+        res.send({
+            produkt: product.product_name,
+            lagersaldo: product.stock_quantity,
+            lagerstatus: product.stock_quantity > 0,
+        });
+    });
 });
 
 /* ------------ENDPOINTS ADMIN-PERSPEKTIV-------- */
