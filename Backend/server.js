@@ -38,12 +38,13 @@ db.connect((err) => {
 // kan spara data per användare mellan flera HTTP-requests
 // Exempel: kundvagn, inloggningsstatus, användar-ID
 const session = require("express-session");
-app.use(session({
- secret: process.env.SESSION_SECRET, // En hemlig nyckel som används för att signera session-cookien
- resave: false,
- saveUninitialized: true
-}));
-
+app.use(
+    session({
+        secret: process.env.SESSION_SECRET, // En hemlig nyckel som används för att signera session-cookien
+        resave: false,
+        saveUninitialized: true,
+    }),
+);
 
 /* ------------ENDPOINTS KUND-PERSPEKTIV-------- */
 
@@ -69,11 +70,11 @@ app.get("/products/:id", (req, res) => {
     const id = req.params.id;
 
     db.query("SELECT * FROM products WHERE id = ?", [id], (err, result) => {
-        if (err) return res.status(500).json(err);
+        if (err) return res.status(500).send(err);
         if (!result.length)
             return res.status(404).send("Produkten hittades inte");
 
-        res.json(result[0]);
+        res.send(result[0]);
     });
 });
 
@@ -109,7 +110,7 @@ app.post("/orders", (req, res) => {
                     if (err2) return res.status(500).send(err2);
 
                     // 4) Svar
-                    res.status(201).json({
+                    res.status(201).send({
                         message: "Order skapad!",
                         order_id: orderId,
                         customer_id,
@@ -139,10 +140,10 @@ app.get("/orders/:id", (req, res) => {
                 `;
 
     db.query(sql, [id], (err, result) => {
-        if (err) return res.status(500).json(err);
+        if (err) return res.status(500).send(err);
         if (!result.length) return res.status(404).send("Inga ordrar hittades");
 
-        res.json(result);
+        res.send(result);
     });
 });
 
@@ -171,12 +172,12 @@ app.get("/products/search", async (req, res) => {
 
 // #6 Som kund vill jag kunna lägga till produkter i varukorgen
 app.post("/cart/add", (req, res) => {
-const { product_id, quantity } = req.body;
-if (!req.session.cart) {
-req.session.cart = [];
-}
-req.session.cart.push({ product_id, quantity });
-res.json({ message: "Produkt tillagd i varukorgen!" });
+    const { product_id, quantity } = req.body;
+    if (!req.session.cart) {
+        req.session.cart = [];
+    }
+    req.session.cart.push({ product_id, quantity });
+    res.json({ message: "Produkt tillagd i varukorgen!" });
 });
 
 // #7 Som kund vill jag kunna se min varukorg med totalpris
@@ -185,14 +186,14 @@ app.get("/cart", (req, res) => {
     if (!req.session.cart || req.session.cart.length === 0) {
         return res.json({
             cart: [],
-            totalPrice: 0
+            totalPrice: 0,
         });
     }
 
     const cart = req.session.cart;
 
     // Plocka ut alla produkt-id:n från varukorgen
-    const productIds = cart.map(item => item.product_id);
+    const productIds = cart.map((item) => item.product_id);
 
     // Hämta produktinfo från databasen
     const sql = `
@@ -207,9 +208,9 @@ app.get("/cart", (req, res) => {
         let totalPrice = 0;
 
         // Bygg en snygg varukorg att skicka till frontend
-        // ---------------------------------------------Ska vi ha kvar den här biten?----------------- 
-        const detailedCart = cart.map(item => {
-            const product = products.find(p => p.id === item.product_id);
+        // ---------------------------------------------Ska vi ha kvar den här biten?-----------------
+        const detailedCart = cart.map((item) => {
+            const product = products.find((p) => p.id === item.product_id);
 
             const itemTotal = product.price * item.quantity;
             totalPrice += itemTotal;
@@ -219,13 +220,73 @@ app.get("/cart", (req, res) => {
                 product_name: product.product_name,
                 price: product.price,
                 quantity: item.quantity,
-                itemTotal
+                itemTotal,
             };
         });
 
         res.json({
             cart: detailedCart,
-            totalPrice
+            totalPrice,
+        });
+    });
+});
+
+// #8 Som kund vill jag kunna ta bort produkter från varukorgen
+
+/*  Eftersom cart ligger i JavaScript/session och inte i MySQL måste jag själv se till 
+att datatyper matchar, eftersom JS inte konverterar lika automatiskt som databasen. */
+
+app.delete("/cart/:product_id", (req, res) => {
+    const productId = Number(req.params.product_id);
+
+    // Om varukorgen inte finns
+    if (!req.session.cart || req.session.cart.length === 0) {
+        return res.status(404).json({ message: "Varukorgen är tom." });
+    }
+
+    // Filtrera bort alla rader med samma product_id
+    const beforeCount = req.session.cart.length;
+    req.session.cart = req.session.cart.filter(
+        (item) => Number(item.product_id) !== productId,
+    );
+
+    // Om inget togs bort betyder det att produkten inte fanns i varukorgen
+    if (req.session.cart.length === beforeCount) {
+        return res
+            .status(404)
+            .send({ message: "Produkten finns inte i varukorgen." });
+    }
+
+    res.send({ message: "Produkt borttagen från varukorgen!" });
+});
+
+// #9 Som kund vill jag kunna se om en produkt finns i lager
+app.get("/products/:id/stock", (req, res) => {
+    const id = req.params.id;
+
+    const sql = `
+        SELECT 
+            product_name,
+            stock_quantity
+        FROM products
+        WHERE id = ?
+    `;
+
+    db.query(sql, [id], (err, results) => {
+        if (err) return res.status(500).send(err);
+
+        if (results.length === 0) {
+            return res
+                .status(404)
+                .send({ message: "Produkten hittades inte." });
+        }
+
+        const product = results[0];
+
+        res.send({
+            produkt: product.product_name,
+            lagersaldo: product.stock_quantity,
+            lagerstatus: product.stock_quantity > 0,
         });
     });
 });
