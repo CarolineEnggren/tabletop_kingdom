@@ -146,8 +146,37 @@ app.get("/orders/:id", (req, res) => {
         res.send(result);
     });
 });
+// #6 Som kund vill jag kunna filtrera produkter efter kategori
+app.get("/products/category/:id", (req, res) => {
+    const categoryId = req.params.id;
 
-// #5 Som kund vill jag kunna söka efter produkter så att jag snabbt kan hitta specifika varor
+    const sql = `
+        SELECT 
+            c.name AS kategori,
+            p.sku AS artikelnummer,
+            p.product_name AS produkt,
+            p.price AS pris,
+            p.stock_quantity AS lagersaldo
+        FROM products p
+        JOIN categories_products cp ON p.id = cp.products_id
+        JOIN categories c ON c.id = cp.categories_id
+        WHERE c.id = ?
+    `;
+
+    db.query(sql, [categoryId], (err, results) => {
+        if (err) return res.status(500).send(err);
+
+        if (!results.length) {
+            return res.status(404).send({
+                message: "Inga produkter hittades i denna kategori.",
+            });
+        }
+
+        res.send(results);
+    });
+});
+
+// #6 Som kund vill jag kunna söka efter produkter så att jag snabbt kan hitta specifika varor
 app.get("/products/search", async (req, res) => {
     const search = req.query.q;
 
@@ -170,7 +199,7 @@ app.get("/products/search", async (req, res) => {
 
 // Utökade funktioner kundperspektiv
 
-// #6 Som kund vill jag kunna lägga till produkter i varukorgen
+// #7 Som kund vill jag kunna lägga till produkter i varukorgen
 app.post("/cart/add", (req, res) => {
     const { product_id, quantity } = req.body;
     if (!req.session.cart) {
@@ -180,7 +209,7 @@ app.post("/cart/add", (req, res) => {
     res.json({ message: "Produkt tillagd i varukorgen!" });
 });
 
-// #7 Som kund vill jag kunna se min varukorg med totalpris
+// #8 Som kund vill jag kunna se min varukorg med totalpris
 app.get("/cart", (req, res) => {
     // Om varukorgen inte finns eller är tom
     if (!req.session.cart || req.session.cart.length === 0) {
@@ -231,7 +260,7 @@ app.get("/cart", (req, res) => {
     });
 });
 
-// #8 Som kund vill jag kunna ta bort produkter från varukorgen
+// #9 Som kund vill jag kunna ta bort produkter från varukorgen
 
 /*  Eftersom cart ligger i JavaScript/session och inte i MySQL måste jag själv se till 
 att datatyper matchar, eftersom JS inte konverterar lika automatiskt som databasen. */
@@ -260,7 +289,7 @@ app.delete("/cart/:product_id", (req, res) => {
     res.send({ message: "Produkt borttagen från varukorgen!" });
 });
 
-// #9 Som kund vill jag kunna se om en produkt finns i lager
+// #10 Som kund vill jag kunna se om en produkt finns i lager
 app.get("/products/:id/stock", (req, res) => {
     const id = req.params.id;
 
