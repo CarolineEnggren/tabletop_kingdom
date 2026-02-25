@@ -14,6 +14,9 @@ const app = express();
 
 const db = require("./database");
 
+//-------------------------------------------------------TEST-----------------------------
+app.use(express.json());
+
 // ========== SESSIONHANTERING (kundvagn / inloggning) ==========
 
 // Importerar express-session, ett middleware som gör att servern
@@ -62,38 +65,113 @@ app.get("/products/:id", (req, res) => {
 
 // # 3 Som kund vill jag kunna slutföra ett köp/lägga en order så att jag kan genomföra mina inköp
 app.post("/orders", (req, res) => {
-	const { customer_id, items } = req.body;
+	const {
+		customer_id,
+		delivery_name,
+		delivery_street,
+		delivery_postalcode,
+		delivery_city,
+		delivery_country,
+		items,
+	} = req.body || {};
 
-	// 1) Valideringssteg
-	if (!customer_id || !items || items.length === 0) {
-		return res.status(400).send("customer_id och items krävs");
+	// 1) Validering
+	if (
+		!customer_id ||
+		!delivery_name ||
+		!delivery_street ||
+		!delivery_postalcode ||
+		!delivery_city ||
+		!delivery_country ||
+		!items ||
+		items.length === 0
+	) {
+		return res.status(400).send("Alla fält + items krävs");
 	}
 
-	// 2) Skapa order (bara customer_id + datum)
+	// 2) Plocka ut alla produkt-id
+	const productIds = items.map(i => i.product_id);
+
+	// 3) Hämta priser från DB
 	db.query(
-		"INSERT INTO orders (customer_id, order_date) VALUES (?, NOW())",
-		[customer_id],
-		(err, orderResult) => {
+		"SELECT id, price FROM products WHERE id IN (?)",
+		[productIds],
+		(err, products) => {
 			if (err) return res.status(500).send(err);
 
-			const orderId = orderResult.insertId;
+			// 4) Räkna totalsumma
+			let total = 0;
 
-			// 3) Skapa order_items-rader
-			const values = items.map(i => [orderId, i.product_id, i.quantity]);
+			for (let item of items) {
+				const product = products.find(p => p.id === item.product_id);
 
+				if (!product) {
+					return res.status(400).send("Ogiltig produkt i ordern");
+				}
+
+				total += product.price * item.quantity;
+			}
+
+			// 5) Skapa order (med total_amount)
 			db.query(
-				"INSERT INTO order_items (order_id, product_id, quantity) VALUES ?",
-				[values],
-				err2 => {
+				`INSERT INTO orders
+        (
+          customer_id,
+          delivery_name,
+          delivery_street,
+          delivery_postalcode,
+          delivery_city,
+          delivery_country,
+          total_amount,
+          order_date
+        )
+        VALUES (?,?,?,?,?,?,?, NOW())`,
+				[
+					customer_id,
+					delivery_name,
+					delivery_street,
+					delivery_postalcode,
+					delivery_city,
+					delivery_country,
+					total,
+				],
+				(err2, orderResult) => {
 					if (err2) return res.status(500).send(err2);
 
-					// 4) Svar
-					res.status(201).send({
-						message: "Order skapad!",
-						order_id: orderId,
-						customer_id,
-						items,
+					const orderId = orderResult.insertId;
+
+					// 6) Skapa order_items
+					const values = items.map(i => {
+						const product = products.find(
+							p => p.id === i.product_id,
+						);
+
+						if (!product) {
+							throw new Error("Produkt saknas: " + i.product_id);
+						}
+
+						return [
+							orderId,
+							i.product_id,
+							i.quantity,
+							product.price,
+						];
 					});
+
+					db.query(
+						"INSERT INTO order_items (order_id, product_id, quantity, unit_price) VALUES ?",
+						[values],
+						err3 => {
+							if (err3) return res.status(500).send(err3);
+
+							// 7) Klart
+							res.status(201).send({
+								message: "Order skapad!",
+								order_id: orderId,
+								total_amount: total,
+							});
+						},
+					);
 				},
 			);
 		},
