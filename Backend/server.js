@@ -208,7 +208,7 @@ app.get("/products/category/:id", (req, res) => {
 
 	const sql = `
         SELECT 
-            c.name AS kategori,
+            c.category_name AS kategori,
             p.sku AS artikelnummer,
             p.product_name AS produkt,
             p.price AS pris,
