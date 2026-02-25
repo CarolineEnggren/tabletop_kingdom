@@ -28,6 +28,7 @@ app.use(
 		secret: process.env.SESSION_SECRET, // En hemlig nyckel som används för att signera session-cookien
 		resave: false,
 		saveUninitialized: true,
+		cookie: { secure: false }, // true endast om HTTPS
 	}),
 );
 
@@ -266,13 +267,19 @@ app.get("/products/category/:id", (req, res) => {
 // Utökade funktioner kundperspektiv
 
 // #7 Som kund vill jag kunna lägga till produkter i varukorgen
+
 app.post("/cart/add", (req, res) => {
 	const { product_id, quantity } = req.body;
+
 	if (!req.session.cart) {
 		req.session.cart = [];
 	}
 	req.session.cart.push({ product_id, quantity });
-	res.json({ message: "Produkt tillagd i varukorgen!" });
+
+	req.session.save(err => {
+		if (err) return res.status(500).send(err);
+		res.json({ message: "Produkt tillagd i varukorgen!" });
+	});
 });
 
 // #8 Som kund vill jag kunna se min varukorg med totalpris
