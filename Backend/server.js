@@ -48,6 +48,37 @@ app.get("/products", (req, res) => {
 	});
 });
 
+// #6 Som kund vill jag kunna söka efter produkter så att jag snabbt kan hitta specifika varor
+app.get("/products/search", (req, res) => {
+	const search = req.query.q;
+
+	// 1) Validering
+	if (!search) {
+		return res.status(400).json({ error: "Search query required" });
+	}
+
+	// 2) SQL
+	const sql = `
+    SELECT id, product_name, price, sku, stock_quantity
+    FROM products
+    WHERE product_name LIKE CONCAT('%', ?, '%')
+    ORDER BY product_name LIKE CONCAT(?, '%') DESC,
+             product_name
+    LIMIT 100
+  `;
+
+	// 3) Kör query med callback
+	db.query(sql, [search, search], (err, rows) => {
+		if (err) {
+			console.error(err); // för debug
+			return res.status(500).json({ error: "Database error" });
+		}
+
+		// 4) Returnera resultat
+		res.json(rows);
+	});
+});
+
 //#2 Som kund vill jag kunna se detaljerad information om en enskild produkt så att jag kan fatta köpbeslut
 
 // Exempel: /products/5 -> req.params.id blir "5"
@@ -230,27 +261,6 @@ app.get("/products/category/:id", (req, res) => {
 
 		res.send(results);
 	});
-});
-
-// #6 Som kund vill jag kunna söka efter produkter så att jag snabbt kan hitta specifika varor
-app.get("/products/search", async (req, res) => {
-	const search = req.query.q;
-
-	if (!search) {
-		return res.status(400).json({ error: "Search query required" });
-	}
-
-	const sql = `
-    SELECT id, product_name, price, sku, stock_quantity
-    FROM products
-    WHERE product_name LIKE CONCAT('%', ?, '%')
-	ORDER BY product_name LIKE CONCAT(?, '%') DESC,
-         product_name;
-    LIMIT 100
-  `;
-
-	const [rows] = await db.execute(sql, [search, search]);
-	res.json(rows);
 });
 
 // Utökade funktioner kundperspektiv
