@@ -28,6 +28,7 @@ app.use(
 		secret: process.env.SESSION_SECRET, // En hemlig nyckel som används för att signera session-cookien
 		resave: false,
 		saveUninitialized: true,
+		cookie: { secure: false }, // true endast om HTTPS
 	}),
 );
 
@@ -45,6 +46,37 @@ app.get("/products", (req, res) => {
 		// "result" innehåller datan (raderna) från SELECT.
 		// Skickar tillbaka alla produkter som JSON till klienten (ex. Thunder Client).
 		res.send(result);
+	});
+});
+
+// #6 Som kund vill jag kunna söka efter produkter så att jag snabbt kan hitta specifika varor
+app.get("/products/search", (req, res) => {
+	const search = req.query.q;
+
+	// 1) Validering
+	if (!search) {
+		return res.status(400).json({ error: "Search query required" });
+	}
+
+	// 2) SQL
+	const sql = `
+    SELECT id, product_name, price, sku, stock_quantity
+    FROM products
+    WHERE product_name LIKE CONCAT('%', ?, '%')
+    ORDER BY product_name LIKE CONCAT(?, '%') DESC,
+             product_name
+    LIMIT 100
+  `;
+
+	// 3) Kör query med callback
+	db.query(sql, [search, search], (err, rows) => {
+		if (err) {
+			console.error(err); // för debug
+			return res.status(500).json({ error: "Database error" });
+		}
+
+		// 4) Returnera resultat
+		res.json(rows);
 	});
 });
 
@@ -208,7 +240,7 @@ app.get("/products/category/:id", (req, res) => {
 
 	const sql = `
         SELECT 
-            c.name AS kategori,
+            c.category_name AS kategori,
             p.sku AS artikelnummer,
             p.product_name AS produkt,
             p.price AS pris,
@@ -232,37 +264,22 @@ app.get("/products/category/:id", (req, res) => {
 	});
 });
 
-// #6 Som kund vill jag kunna söka efter produkter så att jag snabbt kan hitta specifika varor
-app.get("/products/search", async (req, res) => {
-	const search = req.query.q;
-
-	if (!search) {
-		return res.status(400).json({ error: "Search query required" });
-	}
-
-	const sql = `
-    SELECT id, product_name, price, sku, stock_quantity
-    FROM products
-    WHERE product_name LIKE CONCAT('%', ?, '%')
-	ORDER BY product_name LIKE CONCAT(?, '%') DESC,
-         product_name;
-    LIMIT 100
-  `;
-
-	const [rows] = await db.execute(sql, [search, search]);
-	res.json(rows);
-});
-
 // Utökade funktioner kundperspektiv
 
 // #7 Som kund vill jag kunna lägga till produkter i varukorgen
+
 app.post("/cart/add", (req, res) => {
 	const { product_id, quantity } = req.body;
+
 	if (!req.session.cart) {
 		req.session.cart = [];
 	}
 	req.session.cart.push({ product_id, quantity });
-	res.json({ message: "Produkt tillagd i varukorgen!" });
+
+	req.session.save(err => {
+		if (err) return res.status(500).send(err);
+		res.json({ message: "Produkt tillagd i varukorgen!" });
+	});
 });
 
 // #8 Som kund vill jag kunna se min varukorg med totalpris
