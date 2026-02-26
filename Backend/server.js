@@ -30,6 +30,12 @@ app.use(
     }),
 );
 
+// ========== CORS (Cross-Origin Resource Sharing) ==========
+// CORS är en säkerhetsmekanism i webbläsare som begränsar vilka domäner som kan göra AJAX-requests till din server.
+// Utan CORS kan du inte anropa din server från en frontend som körs på en annan port (t.ex. React dev server på 3000).
+const cors = require("cors");
+app.use(cors());
+
 // Importera routers
 const productsRouter = require("./routes/products");
 const cartRouter = require("./routes/cart");
