@@ -1,7 +1,10 @@
+const express = require("express");
+const router = express.Router();
+const db = require("./database");
 
 // ++ #8 Som kund vill jag kunna lägga till produkter i varukorgen
 
-app.post("/cart/add", (req, res) => {
+router.post("/cart/add", (req, res) => {
     const { product_id, quantity } = req.body;
 
     if (!req.session.cart) {
@@ -16,7 +19,8 @@ app.post("/cart/add", (req, res) => {
 });
 
 // ++ #9 Som kund vill jag kunna se min varukorg med totalpris
-app.get("/cart", (req, res) => {
+router.get("/cart", (req, res) => {
+    const cart = req.session.cart || [];
     // Om varukorgen inte finns eller är tom
     if (cart.length === 0) {
         return res.json({
@@ -25,8 +29,6 @@ app.get("/cart", (req, res) => {
             totalPrice: 0,
         });
     }
-
-    const cart = req.session.cart;
 
     // Plocka ut alla produkt-id:n från varukorgen
     const productIds = cart.map((item) => item.product_id);
@@ -72,7 +74,7 @@ app.get("/cart", (req, res) => {
 /*  Eftersom cart ligger i JavaScript/session och inte i MySQL måste jag själv se till 
 att datatyper matchar med "Number", eftersom JS inte konverterar lika automatiskt som databasen. */
 
-app.delete("/cart/:product_id", (req, res) => {
+router.delete("/cart/:product_id", (req, res) => {
     const productId = Number(req.params.product_id);
 
     // Om varukorgen inte finns
@@ -95,3 +97,5 @@ app.delete("/cart/:product_id", (req, res) => {
 
     res.send({ message: "Produkt borttagen från varukorgen!" });
 });
+
+module.exports = router;
