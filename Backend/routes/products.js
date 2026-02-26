@@ -1,9 +1,11 @@
-
+const express = require("express");
+const router = express.Router();
+const db = require("./database");
 
 // #1 Som kund vill jag kunna se alla tillgängliga produkter så att jag kan bläddra i sortimentet
 
-// app.get betyder: när någon gör en GET-request till /products ska denna funktion köras.
-app.get("/products", (req, res) => {
+// .get betyder: när någon gör en GET-request till /products ska denna funktion köras.
+router.get("/products", (req, res) => {
     // db.query skickar SQL till databasen.
     db.query("SELECT * FROM products", (err, result) => {
         //"err" blir satt om något går fel.
@@ -15,9 +17,8 @@ app.get("/products", (req, res) => {
     });
 });
 
-
 // #2 Som kund vill jag kunna söka efter produkter så att jag snabbt kan hitta specifika varor
-app.get("/products/search", (req, res) => {
+router.get("/products/search", (req, res) => {
     const search = req.query.q;
 
     // Validering
@@ -47,11 +48,10 @@ app.get("/products/search", (req, res) => {
     });
 });
 
-
 //#3 Som kund vill jag kunna se detaljerad information om en enskild produkt så att jag kan fatta köpbeslut
 
 // Exempel: /products/5 -> req.params.id blir "5"
-app.get("/products/:id", (req, res) => {
+router.get("/products/:id", (req, res) => {
     const id = req.params.id;
 
     db.query("SELECT * FROM products WHERE id = ?", [id], (err, result) => {
@@ -63,9 +63,8 @@ app.get("/products/:id", (req, res) => {
     });
 });
 
-
 // #4 Som kund vill jag kunna filtrera produkter efter kategori
-app.get("/products/category/:id", (req, res) => {
+router.get("/products/category/:id", (req, res) => {
     const categoryId = req.params.id;
 
     const sql = `
@@ -94,9 +93,8 @@ app.get("/products/category/:id", (req, res) => {
     });
 });
 
-
 // ++ #5 Som kund vill jag kunna se om en produkt finns i lager
-app.get("/products/:id/stock", (req, res) => {
+router.get("/products/:id/stock", (req, res) => {
     const id = req.params.id;
 
     const sql = `
@@ -125,3 +123,5 @@ app.get("/products/:id/stock", (req, res) => {
         });
     });
 });
+
+module.exports = router;
