@@ -1,9 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const db = require("./database");
+const db = require("../database");
 
 // #6 Som kund vill jag kunna slutföra ett köp/lägga en order så att jag kan genomföra mina inköp
-app.post("/orders", (req, res) => {
+// /orders
+router.post("/", (req, res) => {
     const {
         customer_id,
         delivery_name,
@@ -118,7 +119,8 @@ app.post("/orders", (req, res) => {
 });
 
 // #7  Som kund vill jag kunna se mina tidigare ordrar så att jag har koll på min köphistorik
-app.get("/orders/:id", (req, res) => {
+// /orders/:id
+router.get("/:id", (req, res) => {
     const id = req.params.id;
 
     const sql = `SELECT 

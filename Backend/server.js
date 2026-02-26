@@ -31,10 +31,10 @@ app.use(
 );
 
 // Importera routers
-const productsRouter = require("./products");
-const cartRouter = require("./cart");
-const ordersRouter = require("./orders");
-const adminRouter = require("./admin");
+const productsRouter = require("./routes/products");
+const cartRouter = require("./routes/cart");
+const ordersRouter = require("./routes/orders");
+const adminRouter = require("./routes/admin");
 
 // Montera routers
 app.use("/products", productsRouter);

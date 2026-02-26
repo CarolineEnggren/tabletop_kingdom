@@ -1,11 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const db = require("./database");
+const db = require("../database");
 
 // #1 Som kund vill jag kunna se alla tillgängliga produkter så att jag kan bläddra i sortimentet
 
 // .get betyder: när någon gör en GET-request till /products ska denna funktion köras.
-router.get("/products", (req, res) => {
+// /products
+router.get("/", (req, res) => {
     // db.query skickar SQL till databasen.
     db.query("SELECT * FROM products", (err, result) => {
         //"err" blir satt om något går fel.
@@ -18,7 +19,8 @@ router.get("/products", (req, res) => {
 });
 
 // #2 Som kund vill jag kunna söka efter produkter så att jag snabbt kan hitta specifika varor
-router.get("/products/search", (req, res) => {
+// /products/search
+router.get("/search", (req, res) => {
     const search = req.query.q;
 
     // Validering
@@ -51,7 +53,8 @@ router.get("/products/search", (req, res) => {
 //#3 Som kund vill jag kunna se detaljerad information om en enskild produkt så att jag kan fatta köpbeslut
 
 // Exempel: /products/5 -> req.params.id blir "5"
-router.get("/products/:id", (req, res) => {
+// /products/:id
+router.get("/:id", (req, res) => {
     const id = req.params.id;
 
     db.query("SELECT * FROM products WHERE id = ?", [id], (err, result) => {
@@ -64,7 +67,8 @@ router.get("/products/:id", (req, res) => {
 });
 
 // #4 Som kund vill jag kunna filtrera produkter efter kategori
-router.get("/products/category/:id", (req, res) => {
+// /products/category/:id
+router.get("/category/:id", (req, res) => {
     const categoryId = req.params.id;
 
     const sql = `
@@ -85,7 +89,7 @@ router.get("/products/category/:id", (req, res) => {
 
         if (!results.length) {
             return res.status(404).send({
-                message: "Inga produkter hittades i denna kategori.",
+                message: "Kategori hittades inte.",
             });
         }
 
@@ -94,7 +98,8 @@ router.get("/products/category/:id", (req, res) => {
 });
 
 // ++ #5 Som kund vill jag kunna se om en produkt finns i lager
-router.get("/products/:id/stock", (req, res) => {
+// /products/:id/stock
+router.get("/:id/stock", (req, res) => {
     const id = req.params.id;
 
     const sql = `

@@ -1,10 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const db = require("./database");
+const db = require("../database");
 
 // ++ #8 Som kund vill jag kunna lägga till produkter i varukorgen
-
-router.post("/cart/add", (req, res) => {
+// /cart/add
+router.post("/add", (req, res) => {
     const { product_id, quantity } = req.body;
 
     if (!req.session.cart) {
@@ -19,7 +19,8 @@ router.post("/cart/add", (req, res) => {
 });
 
 // ++ #9 Som kund vill jag kunna se min varukorg med totalpris
-router.get("/cart", (req, res) => {
+// /cart/
+router.get("/", (req, res) => {
     const cart = req.session.cart || [];
     // Om varukorgen inte finns eller är tom
     if (cart.length === 0) {
@@ -73,8 +74,8 @@ router.get("/cart", (req, res) => {
 
 /*  Eftersom cart ligger i JavaScript/session och inte i MySQL måste jag själv se till 
 att datatyper matchar med "Number", eftersom JS inte konverterar lika automatiskt som databasen. */
-
-router.delete("/cart/:product_id", (req, res) => {
+// /cart/:product_id
+router.delete("/:product_id", (req, res) => {
     const productId = Number(req.params.product_id);
 
     // Om varukorgen inte finns

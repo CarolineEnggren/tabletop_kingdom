@@ -1,11 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const db = require("./database");
+const db = require("../database");
 
 /* ------------ENDPOINTS ADMIN-PERSPEKTIV-------- */
 
 //#11 Som admin vill jag kunna lägga till nya produkter så att sortimentet kan växa
-app.post("/admin/products", (req, res) => {
+// admin/products
+router.post("/products", (req, res) => {
     const { product_name, product_description, price, sku, stock_quantity } =
         req.body;
 
@@ -23,8 +24,8 @@ app.post("/admin/products", (req, res) => {
 });
 
 // #12 Som admin vill jag kunna uppdatera produktinformation så att informationen hålls aktuell
-
-app.patch("/admin/products/:id", (req, res) => {
+// /admin/products/:id
+router.patch("/products/:id", (req, res) => {
     const id = req.params.id;
     const updates = []; // Array som ska innehålla SQL-delar som "price = ?" osv. Vi fyller den bara med fält som faktiskt ska uppdateras
     const values = []; //Array med själva värdena som ska ersätta ? i SQL-queryn. Dessa matchas i samma ordning som frågetecknen
@@ -91,7 +92,8 @@ app.patch("/admin/products/:id", (req, res) => {
 });
 
 // #13 Som admin vill jag kunna ta bort produkter så att utgående produkter kan rensas bort
-app.delete("/admin/products/:id", (req, res) => {
+// /admin/products/:id
+router.delete("/products/:id", (req, res) => {
     const id = req.params.id;
 
     const sql = "DELETE FROM products WHERE id = ?";
@@ -110,7 +112,8 @@ app.delete("/admin/products/:id", (req, res) => {
 });
 
 // #14 Som admin vill jag kunna se alla ordrar så att jag kan hantera verksamheten
-app.get("/admin/orders", (req, res) => {
+// /admin/orders
+router.get("/orders", (req, res) => {
     const sql = `
         SELECT 
             o.id AS ordernummer,
