@@ -12,8 +12,6 @@ const express = require("express");
 // UTAN den här blir req.body oftast undefined i POST/PATCH-requests
 const app = express();
 
-const db = require("./database");
-
 //VIKTIGT: Utan den här raden kan vi inte läsa JSON i request body (req.body blir undefined)
 app.use(express.json());
 
@@ -32,13 +30,17 @@ app.use(
     }),
 );
 
-/* ------------ENDPOINTS KUND-PERSPEKTIV-------- */
+// Importera routers
+const productsRouter = require("./products");
+const cartRouter = require("./cart");
+const ordersRouter = require("./orders");
+const adminRouter = require("./admin");
 
-// Utökade funktioner kundperspektiv
-
-
-
-
+// Montera routers
+app.use("/products", productsRouter);
+app.use("/cart", cartRouter);
+app.use("/orders", ordersRouter);
+app.use("/admin", adminRouter);
 
 // ================= STARTA SERVERN =================
 // listen betyder: börja lyssna på en port (t.ex. 3000)
