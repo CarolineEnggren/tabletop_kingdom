@@ -1,17 +1,155 @@
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Tabletop Kingdom</title>
-	</head>
-	<body>
-		<h1>SPEL</h1>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Crimson+Text:wght@400;600&display=swap"
+            rel="stylesheet"
+        />
+        <title>Tabletop Kingdom</title>
+        <link rel="stylesheet" href="style.css" />
+    </head>
+    <body>
+        <header class="site-header">
+            <div class="site-header__inner">
+                <div class="header-left">
+                    <button
+                        class="menu-btn"
+                        id="menuBtn"
+                        type="button"
+                        aria-haspopup="dialog"
+                        aria-expanded="false"
+                    >
+                        <span class="hamburger" aria-hidden="true">
+                            <span></span><span></span><span></span>
+                        </span>
+                        <span class="menu-text">Meny</span>
+                    </button>
+                    <div class="searchbar">
+                        <input
+                            type="text"
+                            placeholder="Sök efter produkt..."
+                            id="searchInput"
+                        />
+                        <button class="search-btn" type="button">
+                            <img src="assets/searchIcon.png" alt="Sök" />
+                        </button>
+                    </div>
 
-		<button id="loadProducts">Hämta produkter</button>
+                    <!-- Overlay + dropdown -->
+                    <div class="menu-overlay" id="menuOverlay" hidden></div>
 
-		<ul id="productList"></ul>
+                    <div
+                        class="menu-dropdown"
+                        id="menuDropdown"
+                        role="dialog"
+                        aria-label="Kategorier"
+                        hidden
+                    >
+                        <div class="menu-dropdown__head">
+                            <div class="menu-dropdown__title">Kategorier</div>
+                            <button
+                                class="menu-close"
+                                id="menuClose"
+                                type="button"
+                                aria-label="Stäng meny"
+                            >
+                                ✕
+                            </button>
+                        </div>
 
-		<script src="app.js"></script>
-	</body>
+                        <ul class="menu-list" id="menuList">
+                            <!-- JS fyller listan -->
+                        </ul>
+                    </div>
+                </div>
+
+                <img
+                    src="assets/logga.png"
+                    class="logo"
+                    alt="Tabletop Kingdom"
+                />
+
+                <div class="header-right">
+                    <div class="view-toggle">
+                        <button class="toggle-btn active">Kund</button>
+                        <button class="toggle-btn admin">Admin</button>
+                    </div>
+
+                    <button class="cart-btn">
+                        <img src="assets/cartIcon.png" alt="Cart" />
+                    </button>
+                </div>
+            </div>
+        </header>
+        <main>
+            <div class="page">
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+                <br />
+            </div>
+        </main>
+        <footer><p>&copy; 2026 Tabletop Kingdom</p></footer>
+        <script src="app.js"></script>
+    </body>
 </html>
