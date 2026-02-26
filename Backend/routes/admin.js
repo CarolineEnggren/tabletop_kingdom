@@ -1,3 +1,6 @@
+const express = require("express");
+const router = express.Router();
+const db = require("./database");
 
 /* ------------ENDPOINTS ADMIN-PERSPEKTIV-------- */
 
@@ -124,3 +127,5 @@ app.get("/admin/orders", (req, res) => {
         res.send(results);
     });
 });
+
+module.exports = router;
