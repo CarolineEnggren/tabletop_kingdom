@@ -88,66 +88,59 @@
         <main>
             <div class="page">
                 <ul id="productList"></ul>
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
-                <br />
+            </div>
+            <!-- Product Modal -->
+            <div id="productModalOverlay" class="modal-overlay" hidden></div>
+
+            <div
+                id="productModal"
+                class="modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="modalTitle"
+                hidden
+            >
+                <div class="modal__card">
+                    <button
+                        id="modalClose"
+                        class="modal__close"
+                        type="button"
+                        aria-label="Stäng"
+                    >
+                        ✕
+                    </button>
+
+                    <div class="modal__grid">
+                        <div class="modal__img" aria-hidden="true"></div>
+
+                        <div class="modal__content">
+                            <h2 id="modalTitle" class="modal__title">
+                                Produkt
+                            </h2>
+                            <div id="modalPrice" class="modal__price">—</div>
+
+                            <div class="modal__meta-row">
+                                <span class="modal__label">Lagerstatus:</span>
+                                <span id="modalStockStatus" class="modal__badge"
+                                    >—</span
+                                >
+                            </div>
+
+                            <div class="modal__label">Beskrivning</div>
+                            <p id="modalDesc" class="modal__desc">—</p>
+
+                            <div class="modal__actions">
+                                <button
+                                    id="modalAddToCart"
+                                    class="btn btn-primary"
+                                    type="button"
+                                >
+                                    Lägg i kundvagn
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
         <footer><p>&copy; 2026 Tabletop Kingdom</p></footer>
