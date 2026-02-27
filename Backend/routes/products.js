@@ -50,32 +50,23 @@ router.get("/search", (req, res) => {
     });
 });
 
-// #4 Som kund vill jag kunna filtrera produkter efter kategori
+// #3 Som kund vill jag kunna filtrera produkter efter kategori
 // /products/category/:id
 router.get("/category/:id", (req, res) => {
     const categoryId = req.params.id;
 
-    /*  Slår ihop alla kategorier som tillhör samma produkt till 
-        en kommaseparerad sträng (för att undvika duplicerade rader)
-        GROUP_CONCAT(c2.category_name ORDER BY c2.category_name SEPARATOR ', ') AS categories */
-
     const sql = `
-        SELECT
-            p.id,
-            p.product_name,
-            p.price,
-            p.sku,
-            p.stock_quantity,
-        GROUP_CONCAT(c2.category_name ORDER BY c2.category_name SEPARATOR ', ') AS categories 
-        FROM products p
-        JOIN categories_products cp ON cp.products_id = p.id
-        JOIN categories c ON c.id = cp.categories_id
-        LEFT JOIN categories_products cp2 ON cp2.products_id = p.id
-        LEFT JOIN categories c2 ON c2.id = cp2.categories_id
-        WHERE c.id = ?
-        GROUP BY p.id
-        ORDER BY p.product_name
-        LIMIT 100;
+                SELECT
+                    p.id,
+                    p.product_name,
+                    p.price,
+                    p.sku,
+                    p.stock_quantity
+                FROM products p
+                JOIN categories_products cp ON cp.products_id = p.id
+                WHERE cp.categories_id = ?
+                ORDER BY p.product_name
+                LIMIT 100;
     `;
 
     db.query(sql, [categoryId], (err, results) => {
@@ -91,7 +82,7 @@ router.get("/category/:id", (req, res) => {
     });
 });
 
-// ++ #5 Som kund vill jag kunna se om en produkt finns i lager
+// ++ #4 Som kund vill jag kunna se om en produkt finns i lager
 // /products/:id/stock
 router.get("/:id/stock", (req, res) => {
     const id = req.params.id;
@@ -123,13 +114,15 @@ router.get("/:id/stock", (req, res) => {
     });
 });
 
-//#3 Som kund vill jag kunna se detaljerad information om en enskild produkt så att jag kan fatta köpbeslut
+//#5 Som kund vill jag kunna se detaljerad information om en enskild produkt så att jag kan fatta köpbeslut
 
 // Exempel: /products/5 -> req.params.id blir "5"
 // /products/:id
 router.get("/:id", (req, res) => {
     const id = req.params.id;
-
+    /*  Slår ihop alla kategorier som tillhör samma produkt till 
+        en kommaseparerad sträng (för att undvika duplicerade rader)
+        GROUP_CONCAT(c2.category_name ORDER BY c2.category_name SEPARATOR ', ') AS categories */
     const sql = `
             SELECT
                 p.id,
