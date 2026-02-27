@@ -71,17 +71,27 @@ router.get("/:id", (req, res) => {
 router.get("/category/:id", (req, res) => {
     const categoryId = req.params.id;
 
+    /*  Slår ihop alla kategorier som tillhör samma produkt till 
+        en kommaseparerad sträng (för att undvika duplicerade rader)
+        GROUP_CONCAT(c2.category_name ORDER BY c2.category_name SEPARATOR ', ') AS categories */
+
     const sql = `
-        SELECT 
-            c.category_name AS kategori,
-            p.sku AS artikelnummer,
-            p.product_name AS produkt,
-            p.price AS pris,
-            p.stock_quantity AS lagersaldo
+        SELECT
+            p.id,
+            p.product_name,
+            p.price,
+            p.sku,
+            p.stock_quantity,
+        GROUP_CONCAT(c2.category_name ORDER BY c2.category_name SEPARATOR ', ') AS categories 
         FROM products p
-        JOIN categories_products cp ON p.id = cp.products_id
+        JOIN categories_products cp ON cp.products_id = p.id
         JOIN categories c ON c.id = cp.categories_id
+        LEFT JOIN categories_products cp2 ON cp2.products_id = p.id
+        LEFT JOIN categories c2 ON c2.id = cp2.categories_id
         WHERE c.id = ?
+        GROUP BY p.id
+        ORDER BY p.product_name
+        LIMIT 100;
     `;
 
     db.query(sql, [categoryId], (err, results) => {
