@@ -50,22 +50,6 @@ router.get("/search", (req, res) => {
     });
 });
 
-//#3 Som kund vill jag kunna se detaljerad information om en enskild produkt så att jag kan fatta köpbeslut
-
-// Exempel: /products/5 -> req.params.id blir "5"
-// /products/:id
-router.get("/:id", (req, res) => {
-    const id = req.params.id;
-
-    db.query("SELECT * FROM products WHERE id = ?", [id], (err, result) => {
-        if (err) return res.status(500).send(err);
-        if (!result.length)
-            return res.status(404).send("Produkten hittades inte");
-
-        res.send(result[0]);
-    });
-});
-
 // #4 Som kund vill jag kunna filtrera produkter efter kategori
 // /products/category/:id
 router.get("/category/:id", (req, res) => {
@@ -136,6 +120,40 @@ router.get("/:id/stock", (req, res) => {
             lagersaldo: product.stock_quantity,
             lagerstatus: product.stock_quantity > 0,
         });
+    });
+});
+
+//#3 Som kund vill jag kunna se detaljerad information om en enskild produkt så att jag kan fatta köpbeslut
+
+// Exempel: /products/5 -> req.params.id blir "5"
+// /products/:id
+router.get("/:id", (req, res) => {
+    const id = req.params.id;
+
+    const sql = `
+            SELECT
+                p.id,
+                p.product_name,
+                p.product_description,
+                p.price,
+                p.sku,
+                p.stock_quantity,
+                p.is_eol,
+                GROUP_CONCAT(c.category_name ORDER BY c.category_name SEPARATOR ', ') AS categories
+            FROM products p
+            LEFT JOIN categories_products cp ON cp.products_id = p.id
+            LEFT JOIN categories c ON c.id = cp.categories_id
+            WHERE p.id = ?
+            GROUP BY p.id
+            `;
+
+    db.query(sql, [id], (err, result) => {
+        if (err) return res.status(500).send(err);
+
+        if (!result.length)
+            return res.status(404).send("Produkten hittades inte");
+
+        res.send(result[0]);
     });
 });
 
