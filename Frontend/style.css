@@ -1,0 +1,437 @@
+* {
+    box-sizing: border-box;
+}
+
+:root {
+    --gold: #d4af37;
+    --gold-dark: #a8841f;
+
+    --red: #8b1e1e;
+    --red-darker: #5c1313;
+    --dark-red: #330404;
+
+    --brown-dark: #2b1d16;
+    --brown: #6b4a2b;
+
+    --parchment: #e8d8b5;
+    --off-white: #f5f1e6;
+
+    --accent-red: #c83a3a;
+    --accent-blue: #2e4a7d;
+    --accent-green: #3e5c3a;
+
+    --bg: var(--brown-dark);
+    --text: var(--off-white);
+    --panel: rgba(245, 241, 230, 0.06);
+    --border: rgba(245, 241, 230, 0.14);
+
+    --font-body: "Crimson Text", ui-serif, Georgia, "Times New Roman", serif;
+    --font-display: "Cinzel", ui-serif, Georgia, serif;
+    --font-ui:
+        ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
+        Arial;
+}
+
+html,
+body {
+    height: 100%;
+}
+body {
+    padding: 70px 100px 0 100px; /* top left right bottom */
+    margin: 0;
+    font-family: var(--sans);
+    color: var(--text);
+    background:
+        radial-gradient(
+            1000px 500px at 20% -10%,
+            rgba(139, 30, 30, 0.35),
+            transparent 60%
+        ),
+        radial-gradient(
+            800px 500px at 80% 0%,
+            rgba(62, 92, 58, 0.25),
+            transparent 55%
+        ),
+        radial-gradient(
+            1300px 900px at 50% 110%,
+            rgba(46, 74, 125, 0.18),
+            transparent 60%
+        ),
+        var(--bg);
+    background-attachment: fixed;
+}
+.site-header {
+    position: relative;
+    max-width: 1200px;
+    margin: 0 auto;
+    height: 180px;
+
+    /* Ingen bakgrund här längre */
+    background: transparent;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Själva header-"kortet" */
+.site-header::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 30px; /* <-- detta gör att 30px upptill syns body bakom */
+    bottom: 0;
+
+    background: linear-gradient(0deg, var(--off-white), var(--brown));
+    border-radius: 10px 10px 0 0;
+    z-index: 0;
+}
+
+/* Innehållet ovanpå bakgrunden */
+.site-header__inner {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    align-items: flex-end; /* bottenjustering */
+    justify-content: space-between;
+
+    padding: 20px 30px;
+}
+/* --- Header-left menu button --- */
+.header-left {
+    position: relative;
+    display: flex;
+    align-items: flex-end; /* matchar din header-bottom layout */
+}
+
+/* Genomskinlig knapp: bara ikon + text syns */
+.menu-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 8px 10px;
+    border: 0;
+    background: transparent;
+    color: var(--red-darker);
+    cursor: pointer;
+
+    font-weight: 800;
+    letter-spacing: 0.4px;
+    font-size: 20px;
+}
+
+.menu-btn:hover {
+    filter: brightness(1.08);
+}
+
+.hamburger {
+    width: 22px;
+    height: 16px;
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.hamburger span {
+    height: 2px;
+    width: 100%;
+    background: var(--red-darker);
+    border-radius: 999px;
+    opacity: 0.95;
+}
+/* Container */
+.searchbar {
+    display: flex;
+    align-items: center;
+
+    margin-left: 15px;
+    padding: 4px 8px;
+
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(6px);
+}
+
+/* Inputfält */
+.searchbar {
+    display: flex;
+    align-items: center;
+
+    margin-left: 15px;
+    padding: 3px 3px 3px 13px;
+
+    border-radius: 999px;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+
+    background: rgba(255, 255, 255, 0.95); /* nästan helt vit */
+}
+.searchbar input {
+    background: transparent;
+    border: none;
+    outline: none;
+    width: 220px;
+    color: #333;
+}
+/* Placeholder text */
+.searchbar input::placeholder {
+    color: rgba(0, 0, 0, 0.45);
+}
+
+/* Sökknapp */
+.search-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Ikonen */
+.search-btn img {
+    height: 25px;
+    width: auto;
+    opacity: 0.85;
+}
+
+.search-btn:hover img {
+    opacity: 1;
+}
+
+/* --- Overlay + dropdown panel --- */
+.menu-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 200;
+}
+
+.menu-dropdown {
+    position: absolute;
+    left: 0;
+    top: 100%;
+    margin-top: 12px;
+
+    width: 280px;
+    max-height: 60vh;
+    overflow: auto;
+
+    background: color-mix(in srgb, var(--dark-red) 90%, transparent);
+    border: 1px solid rgba(245, 241, 230, 0.18);
+    border-radius: 14px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(10px);
+
+    z-index: 250;
+}
+
+.menu-dropdown__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+
+    padding: 12px 12px;
+    border-bottom: 1px solid rgba(245, 241, 230, 0.14);
+}
+
+.menu-dropdown__title {
+    font-weight: 900;
+    color: var(--off-white);
+}
+
+.menu-close {
+    border: 0;
+    background: transparent;
+    color: var(--off-white);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 6px 8px;
+    border-radius: 10px;
+}
+.menu-close:hover {
+    background: rgba(245, 241, 230, 0.1);
+}
+
+.menu-list {
+    list-style: none;
+    padding: 8px;
+    margin: 0;
+}
+
+.menu-item {
+    width: 100%;
+    text-align: left;
+
+    border: 0;
+    background: transparent;
+    color: var(--off-white);
+    cursor: pointer;
+
+    padding: 10px 10px;
+    border-radius: 10px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    font-weight: 700;
+}
+
+/* Hover: “raden blir mörkare” */
+.menu-item:hover {
+    background: rgba(0, 0, 0, 0.28);
+}
+
+/* Liten id-badge */
+.menu-item__id {
+    font-size: 12px;
+    opacity: 0.75;
+    font-family:
+        ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        "Liberation Mono", "Courier New", monospace;
+}
+.logo {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 10px;
+
+    max-height: 200px;
+    width: auto;
+}
+
+.header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: space-between;
+    height: 100%;
+}
+.view-toggle {
+    margin-top: 20px;
+    display: flex;
+    border-radius: 999px;
+    overflow: hidden;
+    border: 2px solid var(--red-darker);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Grundknapp */
+.toggle-btn {
+    padding: 6px 14px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 13px;
+
+    background: transparent;
+    color: var(--off-white);
+
+    transition: all 0.25s ease;
+}
+
+/* Kund aktiv */
+.toggle-btn.active {
+    background: var(--gold-dark);
+    color: white;
+}
+
+/* Admin-knapp färg */
+.toggle-btn.admin.active {
+    background: var(--red);
+}
+
+/* Hover */
+.toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+.cart-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 8px;
+}
+
+.cart-btn img {
+    height: 40px;
+    width: auto;
+}
+.page {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    background: #f5f1e6;
+    padding: 30px;
+    border-radius: 0 0 10px 10px;
+    color: #222;
+}
+
+/* Scrollbar – Chrome, Edge, Safari */
+
+.menu-dropdown::-webkit-scrollbar {
+    width: 10px;
+}
+
+.menu-dropdown::-webkit-scrollbar-track {
+    background: rgba(43, 29, 22, 0.6);
+    border-radius: 10px;
+}
+
+.menu-dropdown::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--gold-dark), var(--brown));
+    border-radius: 10px;
+    border: 2px solid rgba(43, 29, 22, 0.6);
+}
+
+.menu-dropdown::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, var(--gold), var(--brown));
+}
+
+/* Firefox */
+.menu-dropdown {
+    scrollbar-width: thin;
+    scrollbar-color: var(--gold-dark) rgba(43, 29, 22, 0.6);
+}
+
+body {
+    font-family: var(--font-body);
+}
+
+h1,
+h2,
+h3,
+.brand__name,
+.menu-dropdown__title,
+.menu-text {
+    font-family: var(--font-display);
+    letter-spacing: 0.6px;
+}
+
+button,
+input,
+select,
+textarea,
+.toggle-btn,
+.menu-btn {
+    font-family: var(--font-ui); /* UI känns modern & lättläst */
+}
+footer {
+    height: 100px;
+    display: flex;
+    align-items: center; /* vertikalt centrerad */
+    justify-content: center; /* horisontellt centrerad */
+}
