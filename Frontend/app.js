@@ -1,11 +1,42 @@
-
 const searchInput = document.getElementById("searchInput");
 const searchBtn = document.querySelector(".search-btn");
 
+const API_BASE = "http://localhost:3000";
+
+// ====== HELPERS ======
+async function apiGet(path) {
+    const res = await fetch(`${API_BASE}${path}`, {
+        method: "GET",
+        credentials: "include",
+    });
+    if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`${res.status} ${res.statusText} ${text}`.trim());
+    }
+    return res.json();
+}
+function formatPriceSEK(price) {
+    const n = Number(price);
+    if (!Number.isFinite(n)) return `${price} kr`;
+    return new Intl.NumberFormat("sv-SE", {
+        style: "currency",
+        currency: "SEK",
+    }).format(n);
+}
+
+function stockStatusText(stockQty) {
+    const stock = Number(stockQty);
+    // din ternary-logik (med stock_quantity)
+    return stock === 0
+        ? "Slut i lager"
+        : stock < 10
+          ? "Få i lager (< 10)"
+          : "Finns i lager (+ 10)";
+}
+
 // ---------- HEADER ----------
 
-
-// ----- Categories menu (Hamburger) -----
+// ----- Kategori meny (Hamburgare) -----
 const categories = [
     { id: 1, name: "Barnspel" },
     { id: 2, name: "Kortspel" },
@@ -126,19 +157,19 @@ function initCategoryMenu() {
 
 document.addEventListener("DOMContentLoaded", initCategoryMenu);
 
-
-
 // Funktion som kör sökning
 async function runSearch() {
-  const query = searchInput.value.trim();
-  if (!query) return;
-  try {
-    const data = await apiGet(`/products/search?q=${encodeURIComponent(query)}`);
-    console.log("Search results:", data);
-    renderProducts(data);
-  } catch (err) {
-    console.error(err);
-  }
+    const query = searchInput.value.trim();
+    if (!query) return;
+    try {
+        const data = await apiGet(
+            `/products/search?q=${encodeURIComponent(query)}`,
+        );
+        console.log("Search results:", data);
+        renderProducts(data);
+    } catch (err) {
+        console.error(err);
+    }
 }
 
 // Klick på ikon
@@ -150,72 +181,134 @@ searchInput.addEventListener("keydown", (e) => {
     }
 });
 
+//  ============ MAIN ============
 
-// -----MAIN-----
-
-// ====== KONFIG ======
-// Om du kör frontend och backend på samma origin (t.ex. http://localhost:3000)
-// låt den vara tom: ""
-// Om du kör backend på annan port, sätt t.ex. "http://localhost:3000"
-
-
-const API_BASE = "http://localhost:3000"; // ex: "http://localhost:3000"
-// ====== HELPERS ======
-async function apiGet(path) {
-  const res = await fetch(`${API_BASE}${path}`, {
-    method: "GET",
-    credentials: "include",
-  });
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(`${res.status} ${res.statusText} ${text}`.trim());
-  }
-  return res.json();
-}
 // Rendera produkter i din UL
 function renderProducts(products) {
-  const list = document.getElementById("productList");
-  list.innerHTML = "";
-  if (!Array.isArray(products) || products.length === 0) {
-    const li = document.createElement("li");
-    li.textContent = "Inga produkter hittades.";
-    list.appendChild(li);
-    return;
-  }
-  for (const p of products) {
-    const li = document.createElement("li");
-    li.innerHTML = `
-<strong>${p.product_name}</strong>
-<span> • ${p.price} kr</span>
-<span> • SKU: ${p.sku}</span>
-<span> • Lager: ${p.stock_quantity}</span>
+    const list = document.getElementById("productList");
+    list.innerHTML = "";
+
+    if (!Array.isArray(products) || products.length === 0) {
+        list.innerHTML = `<li class="empty-state">Inga produkter hittades.</li>`;
+        return;
+    }
+
+    for (const p of products) {
+        const li = document.createElement("li");
+        li.className = "product-card";
+
+        li.innerHTML = `
+      <div class="product-img" aria-hidden="true"></div>
+
+      <div class="product-body">
+        <h3 class="product-name">${p.product_name}</h3>
+        <div class="product-price">${p.price} kr</div>
+
+        <div class="product-actions">
+          <button class="btn btn-primary" type="button" data-action="add-to-cart" data-id="${p.id}">
+            Lägg i kundvagn
+          </button>
+          <button class="btn btn-ghost" type="button" data-action="details" data-id="${p.id}">
+            Visa mer
+          </button>
+        </div>
+      </div>
     `;
-    list.appendChild(li);
-  }
+
+        list.appendChild(li);
+    }
 }
+
+document.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-action]");
+    if (!btn) return;
+
+    const action = btn.dataset.action;
+    const id = Number(btn.dataset.id);
+
+    if (action === "details") {
+        openProductDetails(id);
+    }
+
+    if (action === "add-to-cart") {
+        console.log("Add to cart:", id);
+    }
+});
+
 // Hämta alla produkter
 async function loadAllProducts() {
-  const products = await apiGet("/products");
-  renderProducts(products);
+    const products = await apiGet("/products");
+    renderProducts(products);
 }
 // ====== INIT ======
 document.addEventListener("DOMContentLoaded", async () => {
-  try {
-    await loadAllProducts(); // <-- Laddar alltid vid sidstart
-  } catch (err) {
-    console.error(err);
-    const list = document.getElementById("productList");
-    list.innerHTML = `<li>Kunde inte hämta produkter: ${err.message}</li>`;
-  }
+    try {
+        await loadAllProducts(); // <-- Laddar alltid vid sidstart
+    } catch (err) {
+        console.error(err);
+        const list = document.getElementById("productList");
+        list.innerHTML = `<li>Kunde inte hämta produkter: ${err.message}</li>`;
+    }
 });
 
-// // Produktlistan
-// function renderProducts(products) {
-//     const list = document.getElementById("productList");
-//     list.innerHTML = "";
-//     products.forEach(product => {
-//         const li = document.createElement("li");
-//         li.textContent = `${product.product_name} - ${product.price} kr`;
-//         list.appendChild(li);
-//     });
-// }
+const modalOverlay = document.getElementById("productModalOverlay");
+const modal = document.getElementById("productModal");
+const modalClose = document.getElementById("modalClose");
+
+const modalTitle = document.getElementById("modalTitle");
+const modalPrice = document.getElementById("modalPrice");
+const modalDesc = document.getElementById("modalDesc");
+const modalStockStatus = document.getElementById("modalStockStatus");
+const modalAddToCart = document.getElementById("modalAddToCart");
+
+let currentModalProductId = null;
+
+function openModal() {
+    modalOverlay.hidden = false;
+    modal.hidden = false;
+    document.body.style.overflow = "hidden";
+}
+
+function closeModal() {
+    modalOverlay.hidden = true;
+    modal.hidden = true;
+    document.body.style.overflow = "";
+    currentModalProductId = null;
+}
+
+modalClose?.addEventListener("click", closeModal);
+modalOverlay?.addEventListener("click", closeModal);
+
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modal && !modal.hidden) closeModal();
+});
+
+async function openProductDetails(productId) {
+    try {
+        currentModalProductId = productId;
+
+        // Hämta full produktinfo
+        // Om din backend är mountad på /products, är detta rätt:
+        const product = await apiGet(`/products/${productId}`);
+
+        modalTitle.textContent = product.product_name ?? "Produkt";
+        modalPrice.textContent = formatPriceSEK(product.price);
+        modalDesc.textContent =
+            product.product_description ?? "Ingen beskrivning.";
+
+        const qty = product.stock_quantity ?? 0;
+        modalStockStatus.textContent = stockStatusText(qty);
+
+        openModal();
+    } catch (err) {
+        console.error(err);
+        alert("Kunde inte hämta produktinfo: " + err.message);
+    }
+}
+
+// Placeholder för add-to-cart från modalen (kopplar riktig endpoint sen)
+modalAddToCart?.addEventListener("click", () => {
+    if (!currentModalProductId) return;
+    console.log("Add to cart from modal:", currentModalProductId);
+    // här kopplar vi /cart sen
+});
