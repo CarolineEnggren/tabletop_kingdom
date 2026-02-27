@@ -191,6 +191,7 @@ function renderProducts(products) {
     for (const p of products) {
         const li = document.createElement("li");
         li.className = "product-card";
+        /*     const category = p.categories ?? ""; */
 
         li.innerHTML = `
       <div class="product-img" aria-hidden="true"></div>
@@ -254,6 +255,7 @@ const modalTitle = document.getElementById("modalTitle");
 const modalPrice = document.getElementById("modalPrice");
 const modalDesc = document.getElementById("modalDesc");
 const modalStockStatus = document.getElementById("modalStockStatus");
+const modalCategory = document.getElementById("modalCategory");
 const modalAddToCart = document.getElementById("modalAddToCart");
 
 let currentModalProductId = null;
@@ -293,6 +295,14 @@ async function openProductDetails(productId) {
 
         const qty = product.stock_quantity ?? 0;
         modalStockStatus.textContent = stockStatusText(qty);
+
+        const category =
+            product.categories ??
+            product.category_name ??
+            product.kategori ??
+            "—";
+
+        if (modalCategory) modalCategory.textContent = category;
 
         openModal();
     } catch (err) {
