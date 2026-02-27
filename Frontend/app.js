@@ -107,16 +107,11 @@ function initCategoryMenu() {
 
         b.addEventListener("click", async () => {
             try {
-                // Enligt din endpoint:
-                const data = await apiFetch(`/products/category/${c.id}`, {
-                    method: "GET",
-                });
+                const data = await apiGet(`/products/category/${c.id}`);
+                renderProducts(data);
 
-                // Om du har en render-funktion för produkter, kalla den här.
-                // Exempel:
-                // renderProducts(data);
-
-                console.log("Kategori", c.id, c.name, data);
+                const titleEl = document.querySelector("main h1");
+                if (titleEl) titleEl.textContent = c.name.toUpperCase();
             } catch (e) {
                 console.error(e);
                 alert(`Kunde inte hämta kategori ${c.id}: ${e.message}`);
