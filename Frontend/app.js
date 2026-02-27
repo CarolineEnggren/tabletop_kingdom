@@ -1,3 +1,10 @@
+
+const searchInput = document.getElementById("searchInput");
+const searchBtn = document.querySelector(".search-btn");
+
+// ---------- HEADER ----------
+
+
 // ----- Categories menu (Hamburger) -----
 const categories = [
     { id: 1, name: "Barnspel" },
@@ -118,3 +125,97 @@ function initCategoryMenu() {
 }
 
 document.addEventListener("DOMContentLoaded", initCategoryMenu);
+
+
+
+// Funktion som kör sökning
+async function runSearch() {
+  const query = searchInput.value.trim();
+  if (!query) return;
+  try {
+    const data = await apiGet(`/products/search?q=${encodeURIComponent(query)}`);
+    console.log("Search results:", data);
+    renderProducts(data);
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+// Klick på ikon
+searchBtn.addEventListener("click", runSearch);
+// Enter i input
+searchInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+        runSearch();
+    }
+});
+
+
+// -----MAIN-----
+
+// ====== KONFIG ======
+// Om du kör frontend och backend på samma origin (t.ex. http://localhost:3000)
+// låt den vara tom: ""
+// Om du kör backend på annan port, sätt t.ex. "http://localhost:3000"
+
+
+const API_BASE = "http://localhost:3000"; // ex: "http://localhost:3000"
+// ====== HELPERS ======
+async function apiGet(path) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "GET",
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`${res.status} ${res.statusText} ${text}`.trim());
+  }
+  return res.json();
+}
+// Rendera produkter i din UL
+function renderProducts(products) {
+  const list = document.getElementById("productList");
+  list.innerHTML = "";
+  if (!Array.isArray(products) || products.length === 0) {
+    const li = document.createElement("li");
+    li.textContent = "Inga produkter hittades.";
+    list.appendChild(li);
+    return;
+  }
+  for (const p of products) {
+    const li = document.createElement("li");
+    li.innerHTML = `
+<strong>${p.product_name}</strong>
+<span> • ${p.price} kr</span>
+<span> • SKU: ${p.sku}</span>
+<span> • Lager: ${p.stock_quantity}</span>
+    `;
+    list.appendChild(li);
+  }
+}
+// Hämta alla produkter
+async function loadAllProducts() {
+  const products = await apiGet("/products");
+  renderProducts(products);
+}
+// ====== INIT ======
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    await loadAllProducts(); // <-- Laddar alltid vid sidstart
+  } catch (err) {
+    console.error(err);
+    const list = document.getElementById("productList");
+    list.innerHTML = `<li>Kunde inte hämta produkter: ${err.message}</li>`;
+  }
+});
+
+// // Produktlistan
+// function renderProducts(products) {
+//     const list = document.getElementById("productList");
+//     list.innerHTML = "";
+//     products.forEach(product => {
+//         const li = document.createElement("li");
+//         li.textContent = `${product.product_name} - ${product.price} kr`;
+//         list.appendChild(li);
+//     });
+// }
