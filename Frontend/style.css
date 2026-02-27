@@ -307,7 +307,7 @@ body {
     left: 50%;
     transform: translateX(-50%);
     bottom: 10px;
-
+    cursor: pointer;
     max-height: 200px;
     width: auto;
 }
@@ -383,6 +383,11 @@ body {
     color: #222;
 }
 
+#pageTitle {
+    text-align: center;
+    color: var(--red-darker);
+}
+
 /* Scrollbar – Chrome, Edge, Safari */
 
 .menu-dropdown::-webkit-scrollbar {
@@ -431,12 +436,6 @@ textarea,
 .toggle-btn,
 .menu-btn {
     font-family: var(--font-ui); /* UI känns modern & lättläst */
-}
-footer {
-    height: 100px;
-    display: flex;
-    align-items: center; /* vertikalt centrerad */
-    justify-content: center; /* horisontellt centrerad */
 }
 
 /* --- Product grid --- */
@@ -679,8 +678,11 @@ footer {
 .modal__value {
     font-family: var(--font-ui, sans-serif);
     font-weight: 900;
-    color: #111;
+    color: rgba(0, 0, 0, 0.85);
     margin-top: 4px;
+    font-size: 11px;
+    text-transform: uppercase;
+    transform: translateY(6px);
 }
 
 .modal__badge {
@@ -710,4 +712,11 @@ footer {
 }
 [hidden] {
     display: none !important;
+}
+
+footer {
+    height: 100px;
+    display: flex;
+    align-items: center; /* vertikalt centrerad */
+    justify-content: center; /* horisontellt centrerad */
 }

@@ -110,8 +110,8 @@ function initCategoryMenu() {
                 const data = await apiGet(`/products/category/${c.id}`);
                 renderProducts(data);
 
-                const titleEl = document.querySelector("main h1");
-                if (titleEl) titleEl.textContent = c.name.toUpperCase();
+                const titleEl = document.getElementById("pageTitle");
+                if (titleEl) titleEl.textContent = c.name;
             } catch (e) {
                 console.error(e);
                 alert(`Kunde inte hämta kategori ${c.id}: ${e.message}`);
@@ -235,6 +235,9 @@ document.addEventListener("click", (e) => {
 async function loadAllProducts() {
     const products = await apiGet("/products");
     renderProducts(products);
+
+    const titleEl = document.getElementById("pageTitle");
+    if (titleEl) titleEl.textContent = "Produkter";
 }
 // ====== INIT ======
 document.addEventListener("DOMContentLoaded", async () => {
@@ -316,4 +319,10 @@ modalAddToCart?.addEventListener("click", () => {
     if (!currentModalProductId) return;
     console.log("Add to cart from modal:", currentModalProductId);
     // här kopplar vi /cart sen
+});
+
+const logo = document.getElementById("siteLogo");
+
+logo?.addEventListener("click", async () => {
+    await loadAllProducts(); // laddar alla produkter igen
 });
