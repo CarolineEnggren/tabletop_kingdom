@@ -152,6 +152,52 @@ function initCategoryMenu() {
 
 document.addEventListener("DOMContentLoaded", initCategoryMenu);
 
+function initCartDropdown() {
+    const cartBtn = document.getElementById("cartBtn");
+    const overlay = document.getElementById("cartOverlay");
+    const dropdown = document.getElementById("cartDropdown");
+    const closeBtn = document.getElementById("cartClose");
+
+    // Debug: ser du dessa i console?
+    console.log(
+        "cartBtn:",
+        cartBtn,
+        "overlay:",
+        overlay,
+        "dropdown:",
+        dropdown,
+    );
+
+    if (!cartBtn || !overlay || !dropdown || !closeBtn) return;
+
+    function openCart() {
+        overlay.hidden = false;
+        dropdown.hidden = false;
+    }
+
+    function closeCart() {
+        overlay.hidden = true;
+        dropdown.hidden = true;
+    }
+
+    cartBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const isOpen = !dropdown.hidden;
+        if (isOpen) closeCart();
+        else openCart();
+    });
+
+    closeBtn.addEventListener("click", closeCart);
+    overlay.addEventListener("click", closeCart);
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && !dropdown.hidden) closeCart();
+    });
+}
+
+document.addEventListener("DOMContentLoaded", initCartDropdown);
+
 // Funktion som kör sökning
 async function runSearch() {
     const query = searchInput.value.trim();
@@ -314,12 +360,73 @@ async function openProductDetails(productId) {
     }
 }
 
-// Placeholder för add-to-cart från modalen (kopplar riktig endpoint sen)
+// =========================
+// CART
+// =========================
+
+const cart = []; // [{ id, name, price, qty }]
+let currentModalProduct = null; // senaste produkten som öppnats i modalen
+
+function renderCart() {
+    const cartContent = document.getElementById("cartContent");
+    if (!cartContent) return;
+
+    if (cart.length === 0) {
+        cartContent.innerHTML = `<p class="cart-empty">Din kundvagn är tom</p>`;
+        return;
+    }
+
+    cartContent.innerHTML = `
+    <ul class="cart-list">
+      ${cart
+          .map(
+              (item) => `
+        <li class="cart-item">
+          <div class="cart-item__name">${item.name}</div>
+          <div class="cart-item__meta">
+            <span>Antal: ${item.qty}</span>
+            <span>${item.price} kr</span>
+          </div>
+        </li>
+      `,
+          )
+          .join("")}
+    </ul>
+  `;
+}
+
+function addToCart(product) {
+    if (!product) return;
+
+    const id = Number(product.id);
+    if (!id) return;
+
+    const name = product.product_name ?? "Okänd produkt";
+    const price = product.price ?? "—";
+
+    const existing = cart.find((x) => x.id === id);
+    if (existing) existing.qty += 1;
+    else cart.push({ id, name, price, qty: 1 });
+
+    renderCart();
+}
+
+// Koppla modal-knappen "Lägg i kundvagn"
+document.addEventListener("DOMContentLoaded", () => {
+    const modalAddToCart = document.getElementById("modalAddToCart");
+
+    modalAddToCart?.addEventListener("click", () => {
+        addToCart(currentModalProduct);
+    });
+
+    renderCart(); // visar "Din kundvagn är tom" vid start
+});
+/* // Placeholder för add-to-cart från modalen (kopplar riktig endpoint sen)
 modalAddToCart?.addEventListener("click", () => {
     if (!currentModalProductId) return;
     console.log("Add to cart from modal:", currentModalProductId);
     // här kopplar vi /cart sen
-});
+}); */
 
 const logo = document.getElementById("siteLogo");
 

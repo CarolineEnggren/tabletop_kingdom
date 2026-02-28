@@ -79,9 +79,30 @@
                         <button class="toggle-btn admin">Admin</button>
                     </div>
 
-                    <button class="cart-btn">
-                        <img src="assets/cartIcon.png" alt="Cart" />
+                    <button id="cartBtn" type="button" class="cart-btn">
+                        <img src="assets/cartIcon.png" alt="Kundvagn" />
                     </button>
+
+                    <!-- Cart dropdown -->
+                    <div id="cartOverlay" class="dropdown-overlay" hidden></div>
+
+                    <div id="cartDropdown" class="cart-dropdown" hidden>
+                        <div class="cart-dropdown__head">
+                            <h3 class="cart-dropdown__title">Kundvagn</h3>
+                            <button
+                                id="cartClose"
+                                class="cart-dropdown__close"
+                                type="button"
+                                aria-label="Stäng"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <div id="cartContent" class="cart-dropdown__content">
+                            <p class="cart-empty">Din kundvagn är tom</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </header>

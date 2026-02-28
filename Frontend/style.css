@@ -19,6 +19,7 @@
     --accent-red: #c83a3a;
     --accent-blue: #2e4a7d;
     --accent-green: #3e5c3a;
+    --accent-purple: #371f54;
 
     --bg: var(--brown-dark);
     --text: var(--off-white);
@@ -372,6 +373,74 @@ body {
 .cart-btn img {
     height: 40px;
     width: auto;
+}
+
+/* Återanvänd overlay-stil (om du redan har en för meny kan du återanvända samma klass) */
+.dropdown-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.15);
+    z-index: 900;
+}
+
+/* Cart dropdown */
+.cart-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 10px); /* under cart-knappen */
+    width: min(420px, 90vw);
+
+    background: rgba(255, 255, 255, 0.75);
+    border: 1px solid rgba(245, 241, 230, 0.14);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    border-radius: 14px;
+    z-index: 1000;
+
+    overflow: hidden;
+}
+
+/* Om din cart-knapp sitter i en container: gör den relative så dropdown positioneras rätt */
+.site-header__inner {
+    position: relative;
+}
+
+.cart-dropdown__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 12px;
+    border-bottom: 1px solid rgba(245, 241, 230, 0.14);
+}
+
+.cart-dropdown__title {
+    font-weight: 900;
+    letter-spacing: 0.6px;
+    color: var(--accent-purple);
+}
+
+.cart-dropdown__close {
+    border: 0;
+    background: rgba(245, 241, 230, 0.1);
+    color: var(--accent-purple);
+    cursor: pointer;
+    border-radius: 10px;
+    width: 34px;
+    height: 34px;
+}
+.cart-dropdown__close:hover {
+    background: rgba(245, 241, 230, 0.16);
+}
+
+.cart-dropdown__content {
+    max-height: 360px;
+    overflow: auto;
+    padding: 14px;
+}
+
+.cart-empty {
+    margin: 0;
+    color: rgba(0, 0, 0, 0.85);
+    font-weight: 700;
 }
 .page {
     max-width: 1200px;
