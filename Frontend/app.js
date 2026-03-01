@@ -1,7 +1,7 @@
 const searchInput = document.getElementById("searchInput");
 const searchBtn = document.querySelector(".search-btn");
 
-const API_BASE = "http://localhost:3000";
+const API_BASE = "http://127.0.0.1:3000";
 
 // ====== HELPERS ======
 async function apiGet(path) {
@@ -33,7 +33,23 @@ function stockStatusText(stockQty) {
           ? "Få i lager (< 10)"
           : "Finns i lager (+ 10)";
 }
+async function apiPost(path, body) {
+    const res = await fetch(`${API_BASE}${path}`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+    });
 
+    if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(text || res.statusText);
+    }
+
+    return res.json();
+}
 // ---------- HEADER ----------
 
 // ----- Kategori meny (Hamburgare) -----
@@ -173,6 +189,7 @@ function initCartDropdown() {
     function openCart() {
         overlay.hidden = false;
         dropdown.hidden = false;
+        loadCart().catch(console.error);
     }
 
     function closeCart() {
@@ -268,12 +285,28 @@ document.addEventListener("click", (e) => {
     const action = btn.dataset.action;
     const id = Number(btn.dataset.id);
 
-    if (action === "details") {
-        openProductDetails(id);
-    }
-
     if (action === "add-to-cart") {
-        console.log("Add to cart:", id);
+        const originalText = btn.textContent;
+
+        btn.disabled = true;
+
+        addToCart(id, 1)
+            .then(() => {
+                // Visa check
+                btn.textContent = "✔";
+                btn.classList.add("added");
+
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.classList.remove("added");
+                    btn.disabled = false;
+                }, 1000);
+            })
+            .catch((err) => {
+                console.error(err);
+                alert(err.message);
+                btn.disabled = false;
+            });
     }
 });
 
@@ -363,52 +396,74 @@ async function openProductDetails(productId) {
 // =========================
 // CART
 // =========================
+async function loadCart() {
+    const data = await apiGet("/cart"); // förutsätter API_BASE och credentials include i apiGet
+    renderCart(data);
+}
 
-const cart = []; // [{ id, name, price, qty }]
-let currentModalProduct = null; // senaste produkten som öppnats i modalen
+function renderCart(data) {
+    const container = document.getElementById("cartContent");
+    if (!container) return;
 
-function renderCart() {
-    const cartContent = document.getElementById("cartContent");
-    if (!cartContent) return;
+    const items = data?.items || [];
+    const total = data?.total || 0;
 
-    if (cart.length === 0) {
-        cartContent.innerHTML = `<p class="cart-empty">Din kundvagn är tom</p>`;
+    if (items.length === 0) {
+        container.innerHTML = `<p class="cart-empty">Din kundvagn är tom</p>`;
         return;
     }
 
-    cartContent.innerHTML = `
+    container.innerHTML = `
     <ul class="cart-list">
-      ${cart
+      ${items
           .map(
-              (item) => `
+              (it) => `
         <li class="cart-item">
-          <div class="cart-item__name">${item.name}</div>
-          <div class="cart-item__meta">
-            <span>Antal: ${item.qty}</span>
-            <span>${item.price} kr</span>
+          <div class="cart-row">
+            <strong>${it.product_name}</strong>
+            <button class="cart-remove" data-id="${it.id}" aria-label="Ta bort">✕</button>
+          </div>
+          <div class="cart-row">
+            <span>${it.qty} st</span>
+            <span>${it.line_total} kr</span>
           </div>
         </li>
       `,
           )
           .join("")}
     </ul>
+    <div class="cart-total">Totalt: <strong>${total} kr</strong></div>
   `;
+
+    // koppla remove-knappar
+    container.querySelectorAll(".cart-remove").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+            const pid = Number(btn.dataset.id);
+            if (!pid) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/cart/${pid}`, {
+                    method: "DELETE",
+                    credentials: "include",
+                });
+
+                if (!res.ok) {
+                    const text = await res.text().catch(() => "");
+                    throw new Error(text || `Failed to remove product ${pid}`);
+                }
+
+                await loadCart();
+            } catch (err) {
+                console.error(err);
+                alert("Kunde inte ta bort produkten: " + err.message);
+            }
+        });
+    });
 }
 
-function addToCart(product) {
-    if (!product) return;
-
-    const id = Number(product.id);
-    if (!id) return;
-
-    const name = product.product_name ?? "Okänd produkt";
-    const price = product.price ?? "—";
-
-    const existing = cart.find((x) => x.id === id);
-    if (existing) existing.qty += 1;
-    else cart.push({ id, name, price, qty: 1 });
-
-    renderCart();
+async function addToCart(productId, quantity = 1) {
+    await apiPost("/cart/add", { product_id: productId, quantity });
+    await loadCart(); // uppdatera dropdown efteråt
 }
 
 // Koppla modal-knappen "Lägg i kundvagn"
@@ -416,18 +471,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const modalAddToCart = document.getElementById("modalAddToCart");
 
     modalAddToCart?.addEventListener("click", () => {
-        addToCart(currentModalProduct);
+        if (!currentModalProductId) return;
+        addToCart(currentModalProductId, 1).catch(console.error);
     });
 
-    renderCart(); // visar "Din kundvagn är tom" vid start
+    // Ladda faktisk kundvagn från servern direkt (om du vill)
+    loadCart().catch(console.error);
 });
-/* // Placeholder för add-to-cart från modalen (kopplar riktig endpoint sen)
-modalAddToCart?.addEventListener("click", () => {
-    if (!currentModalProductId) return;
-    console.log("Add to cart from modal:", currentModalProductId);
-    // här kopplar vi /cart sen
-}); */
-
 const logo = document.getElementById("siteLogo");
 
 logo?.addEventListener("click", async () => {
