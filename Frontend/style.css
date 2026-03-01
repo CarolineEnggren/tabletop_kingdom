@@ -19,6 +19,7 @@
     --accent-red: #c83a3a;
     --accent-blue: #2e4a7d;
     --accent-green: #3e5c3a;
+    --accent-purple: #371f54;
 
     --bg: var(--brown-dark);
     --text: var(--off-white);
@@ -373,6 +374,111 @@ body {
     height: 40px;
     width: auto;
 }
+
+/* Återanvänd overlay-stil (om du redan har en för meny kan du återanvända samma klass) */
+.dropdown-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.15);
+    z-index: 900;
+}
+
+/* Cart dropdown */
+.cart-dropdown {
+    position: absolute;
+    right: 25px;
+    top: calc(100% + 10px); /* under cart-knappen */
+    width: min(420px, 90vw);
+
+    background: rgba(255, 255, 255, 0.9);
+    color: #222;
+    border: 1px solid rgba(245, 241, 230, 0.14);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    border-radius: 14px;
+    z-index: 1000;
+
+    overflow: hidden;
+}
+
+/* Om din cart-knapp sitter i en container: gör den relative så dropdown positioneras rätt */
+.site-header__inner {
+    position: relative;
+}
+
+.cart-dropdown__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 12px;
+    border-bottom: 1px solid rgba(245, 241, 230, 0.14);
+}
+
+.cart-dropdown__title {
+    font-weight: 900;
+    letter-spacing: 0.6px;
+    color: var(--accent-purple);
+}
+
+.cart-dropdown__close {
+    border: 0;
+    background: rgba(245, 241, 230, 0.1);
+    color: var(--accent-purple);
+    cursor: pointer;
+    border-radius: 10px;
+    width: 34px;
+    height: 34px;
+}
+.cart-dropdown__close:hover {
+    background: rgba(245, 241, 230, 0.16);
+}
+
+.cart-dropdown__content {
+    max-height: 360px;
+    overflow: auto;
+    padding: 14px;
+}
+
+.cart-empty {
+    margin: 0;
+    color: rgba(0, 0, 0, 0.85);
+    font-weight: 700;
+}
+.cart-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 12px;
+}
+
+.cart-item {
+    padding: 10px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.cart-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cart-remove {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.cart-remove:hover {
+    color: red;
+}
+
+.cart-total {
+    margin-top: 15px;
+    padding-top: 10px;
+    text-align: right;
+    font-size: 18px;
+}
 .page {
     max-width: 1200px;
     width: 100%;
@@ -553,7 +659,12 @@ textarea,
 }
 
 .btn-primary:hover {
-    filter: brightness(1.2);
+    filter: brightness(1.5);
+}
+.btn.added {
+    color: white;
+    transition: all 0.2s ease;
+    transform: scale(1.05);
 }
 
 .btn-ghost {
