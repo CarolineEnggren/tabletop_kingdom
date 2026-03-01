@@ -22,51 +22,48 @@ router.post("/add", (req, res) => {
 // /cart/
 router.get("/", (req, res) => {
     const cart = req.session.cart || [];
-    // Om varukorgen inte finns eller är tom
+
     if (cart.length === 0) {
-        return res.json({
-            message: "Varukorgen är tom",
-            cart: [],
-            totalPrice: 0,
-        });
+        return res.json({ items: [], total: 0 });
     }
 
-    // Plocka ut alla produkt-id:n från varukorgen
-    const productIds = cart.map((item) => item.product_id);
+    // Summera quantity per product_id (så du slipper dubbletter)
+    const qtyById = {};
+    for (const row of cart) {
+        const pid = Number(row.product_id);
+        const q = Number(row.quantity) || 0;
+        if (!pid || q <= 0) continue;
+        qtyById[pid] = (qtyById[pid] || 0) + q;
+    }
 
-    // Hämta produktinfo från databasen
+    const ids = Object.keys(qtyById).map(Number);
+    if (ids.length === 0) return res.json({ items: [], total: 0 });
+
+    const placeholders = ids.map(() => "?").join(",");
     const sql = `
-        SELECT id, product_name, price
-        FROM products
-        WHERE id IN (?)
-    `;
+    SELECT id, product_name, price
+    FROM products
+    WHERE id IN (${placeholders})
+  `;
 
-    db.query(sql, [productIds], (err, products) => {
-        if (err) return res.status(500).json(err);
+    db.query(sql, ids, (err, products) => {
+        if (err) return res.status(500).json({ error: "Database error" });
 
-        let totalPrice = 0;
-
-        // Bygg en snygg varukorg att skicka till frontend
-        // ---------------------------------------------Ska vi ha kvar den här biten?-----------------
-        const detailedCart = cart.map((item) => {
-            const product = products.find((p) => p.id === item.product_id);
-
-            const itemTotal = product.price * item.quantity;
-            totalPrice += itemTotal;
-
+        const items = products.map((p) => {
+            const qty = qtyById[p.id] || 0;
+            const price = Number(p.price) || 0;
             return {
-                product_id: product.id,
-                product_name: product.product_name,
-                price: product.price,
-                quantity: item.quantity,
-                itemTotal,
+                id: p.id,
+                product_name: p.product_name,
+                price,
+                qty,
+                line_total: price * qty,
             };
         });
 
-        res.json({
-            cart: detailedCart,
-            totalPrice,
-        });
+        const total = items.reduce((sum, it) => sum + it.line_total, 0);
+
+        res.json({ items, total });
     });
 });
 
