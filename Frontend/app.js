@@ -284,15 +284,19 @@ document.addEventListener("click", (e) => {
 
     const action = btn.dataset.action;
     const id = Number(btn.dataset.id);
+    if (!Number.isFinite(id)) return;
+
+    if (action === "details") {
+        openProductDetails(id);
+        return;
+    }
 
     if (action === "add-to-cart") {
         const originalText = btn.textContent;
-
         btn.disabled = true;
 
         addToCart(id, 1)
             .then(() => {
-                // Visa check
                 btn.textContent = "✔";
                 btn.classList.add("added");
 
