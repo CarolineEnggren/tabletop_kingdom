@@ -40,6 +40,7 @@ html,
 body {
     height: 100%;
 }
+
 body {
     padding: 70px 100px 0 100px; /* top left right bottom */
     margin: 0;
@@ -64,15 +65,13 @@ body {
         var(--bg);
     background-attachment: fixed;
 }
+
 .site-header {
     position: relative;
     max-width: 1200px;
     margin: 0 auto;
     height: 180px;
-
-    /* Ingen bakgrund här längre */
     background: transparent;
-
     display: flex;
     align-items: center;
     justify-content: center;
@@ -105,7 +104,7 @@ body {
 
     padding: 20px 30px;
 }
-/* --- Header-left menu button --- */
+
 .header-left {
     position: relative;
     display: flex;
@@ -148,22 +147,7 @@ body {
     border-radius: 999px;
     opacity: 0.95;
 }
-/* Container */
-.searchbar {
-    display: flex;
-    align-items: center;
 
-    margin-left: 15px;
-    padding: 4px 8px;
-
-    border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-
-    background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(6px);
-}
-
-/* Inputfält */
 .searchbar {
     display: flex;
     align-items: center;
@@ -174,7 +158,7 @@ body {
     border-radius: 999px;
     border: 1px solid rgba(0, 0, 0, 0.2);
 
-    background: rgba(255, 255, 255, 0.95); /* nästan helt vit */
+    background: rgba(255, 255, 255, 0.95);
 }
 .searchbar input {
     background: transparent;
@@ -183,12 +167,11 @@ body {
     width: 220px;
     color: #333;
 }
-/* Placeholder text */
+
 .searchbar input::placeholder {
     color: rgba(0, 0, 0, 0.45);
 }
 
-/* Sökknapp */
 .search-btn {
     border: none;
     background: transparent;
@@ -199,7 +182,6 @@ body {
     justify-content: center;
 }
 
-/* Ikonen */
 .search-btn img {
     height: 25px;
     width: auto;
@@ -261,6 +243,7 @@ body {
     padding: 6px 8px;
     border-radius: 10px;
 }
+
 .menu-close:hover {
     background: rgba(245, 241, 230, 0.1);
 }
@@ -290,12 +273,10 @@ body {
     font-weight: 700;
 }
 
-/* Hover: “raden blir mörkare” */
 .menu-item:hover {
     background: rgba(0, 0, 0, 0.28);
 }
 
-/* Liten id-badge */
 .menu-item__id {
     font-size: 12px;
     opacity: 0.75;
@@ -303,6 +284,7 @@ body {
         ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
         "Liberation Mono", "Courier New", monospace;
 }
+
 .logo {
     position: absolute;
     left: 50%;
@@ -320,6 +302,7 @@ body {
     justify-content: space-between;
     height: 100%;
 }
+
 .view-toggle {
     margin-top: 20px;
     display: flex;
@@ -329,7 +312,6 @@ body {
     background: rgba(255, 255, 255, 0.05);
 }
 
-/* Grundknapp */
 .toggle-btn {
     padding: 6px 14px;
     border: none;
@@ -354,10 +336,10 @@ body {
     background: var(--red);
 }
 
-/* Hover */
 .toggle-btn:hover {
     background: rgba(255, 255, 255, 0.1);
 }
+
 .cart-btn {
     border: none;
     background: transparent;
@@ -375,7 +357,6 @@ body {
     width: auto;
 }
 
-/* Återanvänd overlay-stil (om du redan har en för meny kan du återanvända samma klass) */
 .dropdown-overlay {
     position: fixed;
     inset: 0;
@@ -383,11 +364,10 @@ body {
     z-index: 900;
 }
 
-/* Cart dropdown */
 .cart-dropdown {
     position: absolute;
     right: 25px;
-    top: calc(100% + 10px); /* under cart-knappen */
+    top: calc(100% + 10px);
     width: min(420px, 90vw);
 
     background: rgba(255, 255, 255, 0.9);
@@ -400,7 +380,6 @@ body {
     overflow: hidden;
 }
 
-/* Om din cart-knapp sitter i en container: gör den relative så dropdown positioneras rätt */
 .site-header__inner {
     position: relative;
 }
@@ -428,6 +407,7 @@ body {
     width: 34px;
     height: 34px;
 }
+
 .cart-dropdown__close:hover {
     background: rgba(245, 241, 230, 0.16);
 }
@@ -443,6 +423,7 @@ body {
     color: rgba(0, 0, 0, 0.85);
     font-weight: 700;
 }
+
 .cart-list {
     list-style: none;
     margin: 0;
@@ -479,6 +460,7 @@ body {
     text-align: right;
     font-size: 18px;
 }
+
 .page {
     max-width: 1200px;
     width: 100%;
@@ -493,8 +475,6 @@ body {
     text-align: center;
     color: var(--red-darker);
 }
-
-/* Scrollbar – Chrome, Edge, Safari */
 
 .menu-dropdown::-webkit-scrollbar {
     width: 10px;
@@ -515,7 +495,6 @@ body {
     background: linear-gradient(180deg, var(--gold), var(--brown));
 }
 
-/* Firefox */
 .menu-dropdown {
     scrollbar-width: thin;
     scrollbar-color: var(--gold-dark) rgba(43, 29, 22, 0.6);
@@ -541,7 +520,7 @@ select,
 textarea,
 .toggle-btn,
 .menu-btn {
-    font-family: var(--font-ui); /* UI känns modern & lättläst */
+    font-family: var(--font-ui);
 }
 
 /* --- Product grid --- */
@@ -557,21 +536,25 @@ textarea,
 
 /* Responsive: färre kolumner på mindre skärmar */
 @media (max-width: 1200px) {
+    /* Styles for: #productList */
     #productList {
         grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 }
 @media (max-width: 980px) {
+    /* Styles for: #productList */
     #productList {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 }
 @media (max-width: 720px) {
+    /* Styles for: #productList */
     #productList {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 @media (max-width: 460px) {
+    /* Styles for: #productList */
     #productList {
         grid-template-columns: 1fr;
     }
@@ -600,7 +583,7 @@ textarea,
     position: relative;
 }
 
-/* En enkel "bild-placeholder" */
+/* En "bild-placeholder" */
 .product-img::after {
     content: "Bild";
     position: absolute;
@@ -661,6 +644,7 @@ textarea,
 .btn-primary:hover {
     filter: brightness(1.5);
 }
+
 .btn.added {
     color: white;
     transition: all 0.2s ease;
@@ -724,6 +708,7 @@ textarea,
     height: 38px;
     font-size: 18px;
 }
+
 .modal__close:hover {
     background: rgba(0, 0, 0, 0.1);
 }
@@ -742,6 +727,7 @@ textarea,
     );
     position: relative;
 }
+
 .modal__img::after {
     content: "Bild";
     position: absolute;
@@ -821,6 +807,7 @@ textarea,
     gap: 10px;
     flex-wrap: wrap;
 }
+
 [hidden] {
     display: none !important;
 }
@@ -828,6 +815,6 @@ textarea,
 footer {
     height: 100px;
     display: flex;
-    align-items: center; /* vertikalt centrerad */
-    justify-content: center; /* horisontellt centrerad */
+    align-items: center;
+    justify-content: center;
 }
