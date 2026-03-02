@@ -2,39 +2,53 @@ const express = require("express");
 const router = express.Router();
 const db = require("../database");
 
-/* ------------ENDPOINTS ADMIN-PERSPEKTIV-------- */
-
-//#11 Som admin vill jag kunna lägga till nya produkter så att sortimentet kan växa
-// admin/products
+/**Userstory:
+ * #11 Som admin vill jag kunna lägga till nya produkter så att sortimentet kan växa
+ *
+ * POST /admin/products
+ * Skapar (INSERT) en ny produkt i databasen.
+ * Förväntar sig att frontend skickar ett JSON-body med produktens fält.
+ */
 router.post("/products", (req, res) => {
     const { product_name, product_description, price, sku, stock_quantity } =
         req.body;
 
+    const sql =
+        "INSERT INTO products (product_name, product_description, price, sku, stock_quantity) VALUES (?, ?, ?, ?, ?)";
+
     db.query(
-        "INSERT INTO products (product_name, product_description, price, sku, stock_quantity) VALUES (?, ?, ?, ?, ?)",
+        sql,
         [product_name, product_description, price, sku, stock_quantity],
         (err, result) => {
             if (err) return res.status(500).json(err);
+
             res.status(201).json({
                 message: "Produkt tillagd!",
-                product_id: result.insertId,
+                product_id: result.insertId, // id som MySQL skapade
             });
         },
     );
 });
 
-// #12 Som admin vill jag kunna uppdatera produktinformation så att informationen hålls aktuell
-// /admin/products/:id
+/**Userstory:
+ * #12 Som admin vill jag kunna uppdatera produktinformation så att informationen hålls aktuell
+ *
+ * PATCH /admin/products/:id
+ * Uppdaterar (UPDATE) en produkt.
+ *
+ * PATCH betyder "uppdatera delvis" (till skillnad från PUT som uppdaterar hela resursen).
+ * Vi bygger därför en UPDATE-sats dynamiskt och tar bara med de fält som faktiskt skickats in i requesten.
+ */
 router.patch("/products/:id", (req, res) => {
     const id = req.params.id;
-    const updates = []; // Array som ska innehålla SQL-delar som "price = ?" osv. Vi fyller den bara med fält som faktiskt ska uppdateras
-    const values = []; //Array med själva värdena som ska ersätta ? i SQL-queryn. Dessa matchas i samma ordning som frågetecknen
 
-    // Kollar om frontend skickade ett nytt produktnamn
-    // !== undefined betyder "fältet finns med i requesten"
+    const updates = []; // SQL-delar, t.ex. "price = ?"
+    const values = []; // Värden som ska ersätta frågetecknen
+
+    // För varje fält: om det finns med i body så lägger vi till det i UPDATE.
     if (req.body.product_name !== undefined) {
-        updates.push("product_name = ?"); // Lägg till SQL-fragment för UPDATE-satsen
-        values.push(req.body.product_name); // Lägg till själva värdet som ska sättas i databasen
+        updates.push("product_name = ?");
+        values.push(req.body.product_name);
     }
 
     if (req.body.product_description !== undefined) {
@@ -62,20 +76,20 @@ router.patch("/products/:id", (req, res) => {
         values.push(req.body.is_eol);
     }
 
+    // Om inget fält skickades in finns inget att uppdatera.
     if (updates.length === 0) {
         return res.status(400).json({ message: "Inga fält att uppdatera." });
     }
 
-    // updates.join(", ") gör t.ex:
-    // ["price = ?", "stock_quantity = ?"]
-    // → "price = ?, stock_quantity = ?"
+    // Exempel: updates = ["price = ?", "stock_quantity = ?"]
+    // updates.join(", ") => "price = ?, stock_quantity = ?"
     const sql = `
         UPDATE products
         SET ${updates.join(", ")}
         WHERE id = ?
     `;
 
-    // Lägg till id i slutet av values så det matchar det sista ? i SQL-frågan
+    // Sista ? i SQL är id
     values.push(id);
 
     db.query(sql, values, (err, result) => {
@@ -91,8 +105,12 @@ router.patch("/products/:id", (req, res) => {
     });
 });
 
-// #13 Som admin vill jag kunna ta bort produkter så att utgående produkter kan rensas bort
-// /admin/products/:id
+/**Userstory:
+ * #13 Som admin vill jag kunna ta bort produkter så att utgående produkter kan rensas bort
+ *
+ * DELETE /admin/products/:id
+ * Tar bort en produkt från databasen.
+ */
 router.delete("/products/:id", (req, res) => {
     const id = req.params.id;
 
@@ -111,8 +129,12 @@ router.delete("/products/:id", (req, res) => {
     });
 });
 
-// #14 Som admin vill jag kunna se alla ordrar så att jag kan hantera verksamheten
-// /admin/orders
+/**Userstory:
+ * #14 Som admin vill jag kunna se alla ordrar så att jag kan hantera verksamheten
+ *
+ * GET /admin/orders
+ * Hämtar alla ordrar (med kundnamn) så admin kan se verksamheten.
+ */
 router.get("/orders", (req, res) => {
     const sql = `
         SELECT 

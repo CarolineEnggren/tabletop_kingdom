@@ -1,61 +1,56 @@
-// Läser in variabler från .env-filen (t.ex. DB_USER, DB_PASSWORD)
-// och gör dem tillgängliga via process.env
-require("dotenv").config();
+require("dotenv").config(); // Läser in variabler från .env (t.ex. PORT, SESSION_SECRET)
 
-// Importerar Express-biblioteket så vi kan skapa en webbserver
-// Hämtar Express-paketet från node_modules och gör det tillgängligt i den här filen
-const express = require("express");
+const express = require("express"); // Importerar Express-biblioteket som används för att skapa webservern.
+const app = express(); // Skapar en Express-app som vi kan lägga till "middleware" och "routers" på.
 
-// Skapar en Express-applikation (själva servern)
-// "app" är objektet vi använder för att skapa endpoints
-// (VIKTIGT) Gör så att servern kan läsa JSON i request body
-// UTAN den här blir req.body oftast undefined i POST/PATCH-requests
-const app = express();
-
-//VIKTIGT: Utan den här raden kan vi inte läsa JSON i request body (req.body blir undefined)
+// Middleware som gör att Express kan läsa JSON-body i POST/PATCH/PUT requests.
+// Utan den blir req.body oftast undefined.
 app.use(express.json());
 
-// ========== SESSIONHANTERING (kundvagn / inloggning) ==========
-
-// Importerar express-session, ett middleware som gör att servern
-// kan spara data per användare mellan flera HTTP-requests
-// Exempel: kundvagn, inloggningsstatus, användar-ID
+// ========== SESSION (kundvagn) ==========
+/**
+ * express-session skapar en session per användare.
+ * Servern skickar en cookie (session-id) till webbläsaren.
+ * Nästa request från samma användare skickar med cookien,
+ * och då kan vi hämta deras sparade session-data (t.ex. kundvagn).
+ */
 const session = require("express-session");
 app.use(
     session({
-        secret: process.env.SESSION_SECRET, // En hemlig nyckel som används för att signera session-cookien
-        resave: false,
-        saveUninitialized: true,
-        cookie: { secure: false }, // true endast om HTTPS
+        secret: process.env.SESSION_SECRET, // Hemlig nyckel som signerar session-cookien
+        resave: false, // Spara inte sessionen om den inte ändrats
+        saveUninitialized: true, // Skapa session även för nya besökare (som inte har en session än)
+        cookie: { secure: false }, // secure:true kräver HTTPS
     }),
 );
 
-// ========== CORS (Cross-Origin Resource Sharing) ==========
-// CORS är en säkerhetsmekanism i webbläsare som begränsar vilka domäner som kan göra AJAX-requests till din server.
-// Utan CORS kan du inte anropa din server från en frontend som körs på en annan port (t.ex. React dev server på 3000).
+// ========== CORS ==========
+/**
+ * CORS behövs när frontend och backend kör på olika "origin", (t.ex. olika portar).
+ * credentials:true tillåter cookies (session).
+ */
 const cors = require("cors");
 app.use(
     cors({
         origin: true, // speglar request-origin
-        credentials: true, // tillåter cookies
+        credentials: true,
     }),
 );
 
-// Importera routers
+// ========== ROUTERS ==========
+// Importerar och mountar alla routers (endpoints) från "routes"-mappen.
 const productsRouter = require("./routes/products");
 const cartRouter = require("./routes/cart");
 const ordersRouter = require("./routes/orders");
 const adminRouter = require("./routes/admin");
 
-// Montera routers
 app.use("/products", productsRouter);
 app.use("/cart", cartRouter);
 app.use("/orders", ordersRouter);
 app.use("/admin", adminRouter);
 
-// ================= STARTA SERVERN =================
-// listen betyder: börja lyssna på en port (t.ex. 3000)
-// utan app.listen kör servern inte och du kan inte anropa endpoints.
-app.listen(process.env.PORT, () => {
-    console.log("Server running on port", process.env.PORT);
+// ========== STARTA SERVER ==========
+const port = Number(process.env.PORT) || 3000;
+app.listen(port, () => {
+    console.log("Server running on port", port);
 });
