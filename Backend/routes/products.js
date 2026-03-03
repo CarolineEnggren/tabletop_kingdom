@@ -21,7 +21,6 @@ router.get("/", (req, res) => {
  * GET /products/search?q=...
  * Söker på produktnamn med SQL LIKE.
  *
- * Pedagogik:
  * - CONCAT('%', ?, '%') betyder "innehåller söktermen någonstans"
  * - ORDER BY med "LIKE CONCAT(?, '%')" prioriterar produkter som börjar på söktermen
  */
@@ -55,8 +54,7 @@ router.get("/search", (req, res) => {
  *
  * GET /products/category/:id
  * Hämtar produkter som tillhör en kategori.
- * Tabellen categories_products är en "kopplingstabell" (many-to-many)
- * mellan categories och products.
+ * Tabellen categories_products är en kopplingstabell mellan categories och products.
  */
 router.get("/category/:id", (req, res) => {
     const categoryId = req.params.id;
