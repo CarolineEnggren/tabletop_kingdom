@@ -462,6 +462,11 @@ const modalTitle = document.getElementById("modalTitle");
 const modalPrice = document.getElementById("modalPrice");
 const modalDesc = document.getElementById("modalDesc");
 const modalStockStatus = document.getElementById("modalStockStatus");
+const modalGameInfo = document.getElementById("modalGameInfo");
+const modalPlayers = document.getElementById("modalPlayers");
+const modalPlayMinutes = document.getElementById("modalPlayMinutes");
+const modalReleaseYear = document.getElementById("modalReleaseYear");
+const modalAgeRestriction = document.getElementById("modalAgeRestriction");
 const modalCategory = document.getElementById("modalCategory");
 const modalAddToCartBtn = document.getElementById("modalAddToCart");
 
@@ -509,6 +514,40 @@ async function openProductDetails(productId) {
 
         // Hämta full produktinfo från backend
         const product = await apiGet(`/products/${productId}`);
+
+        const isGame =
+            product.min_players != null && product.max_players != null;
+
+        if (modalGameInfo) modalGameInfo.hidden = !isGame;
+
+        if (isGame) {
+            if (modalPlayers)
+                modalPlayers.textContent = `${product.min_players} - ${product.max_players}`;
+
+            if (modalPlayMinutes)
+                modalPlayMinutes.textContent =
+                    product.play_minutes != null
+                        ? `${product.play_minutes} minuter`
+                        : "—";
+
+            if (modalReleaseYear)
+                modalReleaseYear.textContent =
+                    product.release_year != null
+                        ? String(product.release_year)
+                        : "—";
+
+            if (modalAgeRestriction)
+                modalAgeRestriction.textContent =
+                    product.age_restriction != null
+                        ? `${product.age_restriction}+`
+                        : "—";
+        } else {
+            // Töm så inget "läcker" från föregående spelprodukt
+            if (modalPlayers) modalPlayers.textContent = "—";
+            if (modalPlayMinutes) modalPlayMinutes.textContent = "—";
+            if (modalReleaseYear) modalReleaseYear.textContent = "—";
+            if (modalAgeRestriction) modalAgeRestriction.textContent = "—";
+        }
 
         if (modalTitle)
             modalTitle.textContent = product.product_name ?? "Produkt";

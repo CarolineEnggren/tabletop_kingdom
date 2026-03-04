@@ -754,7 +754,7 @@ textarea,
     margin-top: 6px;
     font-family: var(--font-ui, sans-serif);
     font-weight: 900;
-    font-size: 18px;
+    font-size: 22px;
     color: var(--red-dark, #5c1313);
 }
 
@@ -765,7 +765,7 @@ textarea,
 }
 
 .modal__label {
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 900;
     letter-spacing: 0.4px;
     color: rgba(0, 0, 0, 0.6);
@@ -777,7 +777,7 @@ textarea,
     font-weight: 900;
     color: rgba(0, 0, 0, 0.85);
     margin-top: 4px;
-    font-size: 11px;
+    font-size: 13px;
     text-transform: uppercase;
     transform: translateY(4px);
 }
@@ -790,12 +790,13 @@ textarea,
     border-radius: 999px;
     font-family: var(--font-ui, sans-serif);
     font-weight: 900;
-    font-size: 12px;
+    font-size: 13px;
     background: rgba(0, 0, 0, 0.08);
     color: #111;
 }
 
 .modal__desc {
+    font-size: 18px;
     margin: 8px 0 0;
     line-height: 1.55;
     color: rgba(0, 0, 0, 0.75);

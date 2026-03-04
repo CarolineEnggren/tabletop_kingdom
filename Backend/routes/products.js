@@ -94,6 +94,9 @@ router.get("/category/:id", (req, res) => {
  * - LEFT JOIN gör att vi får med produkter även om de saknar kategori
  * - GROUP_CONCAT slår ihop flera kategorirader till en sträng
  * - GROUP BY behövs när man använder GROUP_CONCAT
+ *
+ * För att få med spel-specifik info (min/max players, age restriction etc) gör vi en LEFT JOIN mot games.
+ * Om produkten inte är ett spel så kommer de fälten bara vara NULL
  */
 router.get("/:id", (req, res) => {
     const id = req.params.id;
@@ -107,10 +110,26 @@ router.get("/:id", (req, res) => {
             p.sku,
             p.stock_quantity,
             p.is_eol,
-            GROUP_CONCAT(c.category_name ORDER BY c.category_name SEPARATOR ', ') AS categories
+
+            g.min_players,
+            g.max_players,
+            g.age_restriction,
+            g.release_year,
+            g.play_minutes,
+
+            GROUP_CONCAT(
+                DISTINCT c.category_name
+                ORDER BY c.category_name
+                SEPARATOR ', '
+            ) AS categories
+
         FROM products p
+
         LEFT JOIN categories_products cp ON cp.products_id = p.id
         LEFT JOIN categories c ON c.id = cp.categories_id
+
+        LEFT JOIN games g ON g.id = p.id
+
         WHERE p.id = ?
         GROUP BY p.id
     `;
@@ -118,8 +137,9 @@ router.get("/:id", (req, res) => {
     db.query(sql, [id], (err, result) => {
         if (err) return res.status(500).send(err);
 
-        if (!result.length)
+        if (!result.length) {
             return res.status(404).send("Produkten hittades inte");
+        }
 
         res.send(result[0]);
     });
