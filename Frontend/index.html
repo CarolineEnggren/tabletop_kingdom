@@ -76,8 +76,20 @@
                 />
                 <div class="header-right">
                     <div class="view-toggle">
-                        <button class="toggle-btn active">Kund</button>
-                        <button class="toggle-btn admin">Admin</button>
+                        <button
+                            id="viewCustomerBtn"
+                            class="toggle-btn active"
+                            type="button"
+                        >
+                            Kund
+                        </button>
+                        <button
+                            id="viewAdminBtn"
+                            class="toggle-btn admin"
+                            type="button"
+                        >
+                            Admin
+                        </button>
                     </div>
 
                     <button id="cartBtn" type="button" class="cart-btn">
@@ -108,73 +120,317 @@
             </div>
         </header>
         <!-- Main: produkttitel, produktlista och produkt-modal -->
+
         <main>
-            <div class="page">
-                <h2 id="pageTitle">Produkter</h2>
-                <ul id="productList"></ul>
-            </div>
-            <!-- Product Modal -->
-            <div id="productModalOverlay" class="modal-overlay" hidden></div>
+            <section id="customerView">
+                <div class="page">
+                    <h2 id="pageTitle">Produkter</h2>
+                    <ul id="productList"></ul>
+                </div>
+                <!-- Product Modal -->
+                <div
+                    id="productModalOverlay"
+                    class="modal-overlay"
+                    hidden
+                ></div>
 
-            <div
-                id="productModal"
-                class="modal"
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="modalTitle"
-                hidden
-            >
-                <div class="modal__card">
-                    <button
-                        id="modalClose"
-                        class="modal__close"
-                        type="button"
-                        aria-label="Stäng"
-                    >
-                        ✕
-                    </button>
+                <div
+                    id="productModal"
+                    class="modal"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="modalTitle"
+                    hidden
+                >
+                    <div class="modal__card">
+                        <button
+                            id="modalClose"
+                            class="modal__close"
+                            type="button"
+                            aria-label="Stäng"
+                        >
+                            ✕
+                        </button>
 
-                    <div class="modal__grid">
-                        <div class="modal__img" aria-hidden="true"></div>
+                        <div class="modal__grid">
+                            <div class="modal__img" aria-hidden="true"></div>
 
-                        <div class="modal__content">
-                            <h2 id="modalTitle" class="modal__title">
-                                Produkt
-                            </h2>
-                            <div id="modalPrice" class="modal__price">—</div>
+                            <div class="modal__content">
+                                <h2 id="modalTitle" class="modal__title">
+                                    Produkt
+                                </h2>
+                                <div id="modalPrice" class="modal__price">
+                                    —
+                                </div>
 
-                            <div class="modal__meta-row">
-                                <span class="modal__label">Lagerstatus:</span>
-                                <span id="modalStockStatus" class="modal__badge"
-                                    >—</span
-                                >
-                            </div>
+                                <div class="modal__meta-row">
+                                    <span class="modal__label"
+                                        >Lagerstatus:</span
+                                    >
+                                    <span
+                                        id="modalStockStatus"
+                                        class="modal__badge"
+                                        >—</span
+                                    >
+                                </div>
 
-                            <div class="modal__label">Beskrivning</div>
-                            <p id="modalDesc" class="modal__desc">—</p>
+                                <div class="modal__label">Beskrivning</div>
+                                <p id="modalDesc" class="modal__desc">—</p>
 
-                            <div class="modal__meta-row">
-                                <span class="modal__label">Kategori:</span>
-                                <span id="modalCategory" class="modal__value"
-                                    >—</span
-                                >
-                            </div>
+                                <div class="modal__meta-row">
+                                    <span class="modal__label">Kategori:</span>
+                                    <span
+                                        id="modalCategory"
+                                        class="modal__value"
+                                        >—</span
+                                    >
+                                </div>
 
-                            <div class="modal__actions">
-                                <button
-                                    id="modalAddToCart"
-                                    class="btn btn-primary"
-                                    type="button"
-                                    data-action="add-to-cart"
-                                >
-                                    Lägg i kundvagn
-                                </button>
+                                <div class="modal__actions">
+                                    <button
+                                        id="modalAddToCart"
+                                        class="btn btn-primary"
+                                        type="button"
+                                        data-action="add-to-cart"
+                                    >
+                                        Lägg i kundvagn
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
+
+            <section id="adminView" class="admin-view" hidden>
+                <div class="admin-page">
+                    <h2 class="admin-title">Admin</h2>
+
+                    <div class="admin-grid">
+                        <section
+                            class="admin-card"
+                            aria-label="Skapa eller uppdatera produkt"
+                        >
+                            <h3>Produkter</h3>
+
+                            <form id="adminProductForm" class="admin-form">
+                                <div class="admin-form__row">
+                                    <label class="admin-label"
+                                        >Produkt-ID (för uppdatering)</label
+                                    >
+                                    <input
+                                        id="adminProductId"
+                                        class="admin-input"
+                                        type="number"
+                                        placeholder="Lämna tomt för ny produkt"
+                                    />
+                                </div>
+
+                                <div class="admin-form__row">
+                                    <label class="admin-label">Namn</label>
+                                    <input
+                                        id="adminProductName"
+                                        class="admin-input"
+                                        type="text"
+                                        required
+                                    />
+                                </div>
+
+                                <div class="admin-form__row">
+                                    <label class="admin-label"
+                                        >Beskrivning</label
+                                    >
+                                    <textarea
+                                        id="adminProductDesc"
+                                        class="admin-textarea"
+                                        rows="3"
+                                    ></textarea>
+                                </div>
+
+                                <div class="admin-form__row admin-form__row--2">
+                                    <div>
+                                        <label class="admin-label"
+                                            >Pris (SEK)</label
+                                        >
+                                        <input
+                                            id="adminProductPrice"
+                                            class="admin-input"
+                                            type="number"
+                                            min="0"
+                                            step="0.01"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label class="admin-label">SKU</label>
+                                        <input
+                                            id="adminProductSku"
+                                            class="admin-input"
+                                            type="text"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div class="admin-form__row admin-form__row--2">
+                                    <div>
+                                        <label class="admin-label"
+                                            >Lagersaldo</label
+                                        >
+                                        <input
+                                            id="adminProductStock"
+                                            class="admin-input"
+                                            type="number"
+                                            min="0"
+                                            step="1"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label class="admin-label"
+                                            >Utgående (is_eol)</label
+                                        >
+                                        <select
+                                            id="adminProductEol"
+                                            class="admin-select"
+                                        >
+                                            <option value="">
+                                                (lämna oförändrat)
+                                            </option>
+                                            <option value="0">Nej</option>
+                                            <option value="1">Ja</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="admin-form__row">
+                                    <label class="admin-label"
+                                        >Kategorier</label
+                                    >
+                                    <p class="admin-hint">
+                                        Välj en eller flera kategorier som
+                                        produkten tillhör.
+                                    </p>
+                                    <div
+                                        id="adminCategories"
+                                        class="admin-categories"
+                                        role="listbox"
+                                        aria-label="Kategorier"
+                                    ></div>
+                                </div>
+
+                                <div class="admin-actions">
+                                    <button
+                                        id="adminCreateBtn"
+                                        class="btn btn-primary"
+                                        type="button"
+                                    >
+                                        Skapa produkt (POST)
+                                    </button>
+                                    <button
+                                        id="adminUpdateBtn"
+                                        class="btn btn-ghost"
+                                        type="button"
+                                    >
+                                        Uppdatera produkt (PATCH)
+                                    </button>
+                                    <button
+                                        id="adminClearBtn"
+                                        class="btn btn-ghost"
+                                        type="button"
+                                    >
+                                        Rensa formulär
+                                    </button>
+                                </div>
+
+                                <p
+                                    id="adminStatus"
+                                    class="admin-status"
+                                    aria-live="polite"
+                                ></p>
+                            </form>
+                        </section>
+
+                        <section class="admin-card" aria-label="Produktlista">
+                            <div class="admin-card__head">
+                                <h3>Alla produkter</h3>
+                                <button
+                                    id="adminReloadProducts"
+                                    class="btn btn-ghost"
+                                    type="button"
+                                >
+                                    Ladda om
+                                </button>
+                            </div>
+                            <div
+                                id="adminProductsList"
+                                class="admin-table-wrap"
+                            >
+                                <table class="admin-table">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Namn</th>
+                                            <th>SKU</th>
+                                            <th>Pris</th>
+                                            <th>Lager</th>
+                                            <th>Åtgärder</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="adminProductsTbody">
+                                        <tr>
+                                            <td colspan="6">Laddar…</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+
+                        <section
+                            class="admin-card admin-card--full"
+                            aria-label="Ordrar"
+                        >
+                            <div class="admin-card__head">
+                                <h3>Ordrar</h3>
+                                <button
+                                    id="adminLoadOrders"
+                                    class="btn btn-ghost"
+                                    type="button"
+                                >
+                                    Hämta ordrar
+                                </button>
+                            </div>
+
+                            <div class="admin-table-wrap">
+                                <table class="admin-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Ordernr</th>
+                                            <th>Kund</th>
+                                            <th>Datum</th>
+                                            <th>Totalsumma</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="adminOrdersTbody">
+                                        <tr>
+                                            <td colspan="4">
+                                                Tryck “Hämta ordrar”.
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p
+                                id="adminOrdersStatus"
+                                class="admin-status"
+                                aria-live="polite"
+                            ></p>
+                        </section>
+                    </div>
+                </div>
+            </section>
         </main>
+
         <!-- Footer: enkel sidfot -->
         <footer><p>&copy; 2026 Tabletop Kingdom</p></footer>
         <script src="app.js"></script>
