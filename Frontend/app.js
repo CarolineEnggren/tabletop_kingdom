@@ -64,6 +64,59 @@ async function apiPost(path, body) {
 }
 
 /**
+ * Gör en PATCH-request mot backend och returnerar JSON (eller tomt svar).
+ * PATCH används när vi vill uppdatera delar av en resurs (t.ex. en produkt).
+ */
+async function apiPatch(path, body) {
+    const res = await fetch(`${API_BASE}${path}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(text || res.statusText);
+    }
+
+    // Vissa endpoints kan svara med tom body. Försök JSON, annars returnera null.
+    const text = await res.text().catch(() => "");
+    if (!text) return null;
+    try {
+        return JSON.parse(text);
+    } catch {
+        return text;
+    }
+}
+
+/**
+ * Gör en DELETE-request mot backend.
+ * Används t.ex. när admin tar bort en produkt.
+ */
+async function apiDelete(path) {
+    const res = await fetch(`${API_BASE}${path}`, {
+        method: "DELETE",
+        credentials: "include",
+    });
+
+    if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(text || res.statusText);
+    }
+
+    const text = await res.text().catch(() => "");
+    if (!text) return null;
+    try {
+        return JSON.parse(text);
+    } catch {
+        return text;
+    }
+}
+
+/**
  * Formaterar ett pris som svensk valuta (SEK).
  * Exempel: 199 -> "199,00 kr" (beroende på webbläsarens Intl-stöd).
  */
@@ -593,3 +646,409 @@ document.addEventListener("DOMContentLoaded", () => {
 logo?.addEventListener("click", () => {
     loadAllProducts().catch(console.error);
 });
+
+// =========================
+// ADMIN-VY (CRUD + ordrar)
+// =========================
+
+/**
+ * Byter mellan Kund-vy och Admin-vy.
+ * Vi visar/döljer två sektioner i HTML:
+ * - #customerView (den vanliga butiken)
+ * - #adminView (adminpanelen)
+ */
+function setView(mode) {
+    const customerView = document.getElementById("customerView");
+    const adminView = document.getElementById("adminView");
+
+    const customerBtn = document.getElementById("viewCustomerBtn");
+    const adminBtn = document.getElementById("viewAdminBtn");
+
+    if (!customerView || !adminView || !customerBtn || !adminBtn) return;
+
+    const isAdmin = mode === "admin";
+
+    customerView.hidden = isAdmin;
+    adminView.hidden = !isAdmin;
+
+    customerBtn.classList.toggle("active", !isAdmin);
+    adminBtn.classList.toggle("active", isAdmin);
+
+    // När vi går till admin: stäng ev. öppna overlays så UI inte känns "fast".
+    if (isAdmin) {
+        closeModal();
+        // Stäng cart om det råkar vara öppet
+        const cartOverlay = document.getElementById("cartOverlay");
+        const cartDropdown = document.getElementById("cartDropdown");
+        if (cartOverlay) cartOverlay.hidden = true;
+        if (cartDropdown) cartDropdown.hidden = true;
+
+        // Ladda admin-data första gången
+        initAdminView().catch(console.error);
+    }
+}
+
+/**
+ * Kopplar klick på Kund/Admin-knapparna i headern.
+ * Vi sparar också valet i localStorage så att sidan minns vyn vid reload.
+ */
+function initViewToggle() {
+    const customerBtn = document.getElementById("viewCustomerBtn");
+    const adminBtn = document.getElementById("viewAdminBtn");
+
+    if (!customerBtn || !adminBtn) return;
+
+    customerBtn.addEventListener("click", () => {
+        localStorage.setItem("viewMode", "customer");
+        setView("customer");
+    });
+
+    adminBtn.addEventListener("click", () => {
+        localStorage.setItem("viewMode", "admin");
+        setView("admin");
+    });
+
+    // Startläge: återställ senaste val (om finns)
+    const saved = localStorage.getItem("viewMode");
+    setView(saved === "admin" ? "admin" : "customer");
+}
+
+document.addEventListener("DOMContentLoaded", initViewToggle);
+
+// ---------- Admin: DOM-referenser ----------
+const adminStatusEl = document.getElementById("adminStatus");
+const adminOrdersStatusEl = document.getElementById("adminOrdersStatus");
+const adminCategoriesEl = document.getElementById("adminCategories");
+const adminProductsTbody = document.getElementById("adminProductsTbody");
+const adminOrdersTbody = document.getElementById("adminOrdersTbody");
+
+const adminProductIdEl = document.getElementById("adminProductId");
+const adminProductNameEl = document.getElementById("adminProductName");
+const adminProductDescEl = document.getElementById("adminProductDesc");
+const adminProductPriceEl = document.getElementById("adminProductPrice");
+const adminProductSkuEl = document.getElementById("adminProductSku");
+const adminProductStockEl = document.getElementById("adminProductStock");
+const adminProductEolEl = document.getElementById("adminProductEol");
+
+const adminCreateBtn = document.getElementById("adminCreateBtn");
+const adminUpdateBtn = document.getElementById("adminUpdateBtn");
+const adminClearBtn = document.getElementById("adminClearBtn");
+const adminReloadProductsBtn = document.getElementById("adminReloadProducts");
+const adminLoadOrdersBtn = document.getElementById("adminLoadOrders");
+
+// Vi använder en flagga så vi inte init:ar admin vyn flera gånger.
+let adminInitialized = false;
+
+/**
+ * Initierar adminvyn: bygger kategorilistan och kopplar knappar.
+ * Körs när man går in i adminläge första gången.
+ */
+async function initAdminView() {
+    if (adminInitialized) return;
+    adminInitialized = true;
+
+    renderAdminCategories();
+
+    adminCreateBtn?.addEventListener("click", () => {
+        createProductFromForm().catch(showAdminError);
+    });
+
+    adminUpdateBtn?.addEventListener("click", () => {
+        updateProductFromForm().catch(showAdminError);
+    });
+
+    adminClearBtn?.addEventListener("click", () => {
+        clearAdminForm();
+        setAdminStatus("Formuläret rensat.");
+    });
+
+    adminReloadProductsBtn?.addEventListener("click", () => {
+        loadAdminProducts().catch(showAdminError);
+    });
+
+    adminLoadOrdersBtn?.addEventListener("click", () => {
+        loadAdminOrders().catch(showAdminError);
+    });
+
+    // Första laddningen
+    await loadAdminProducts();
+}
+
+/** Skriver en statusrad i adminpanelen (för feedback). */
+function setAdminStatus(msg) {
+    if (adminStatusEl) adminStatusEl.textContent = msg;
+}
+
+//** Skriver en statusrad i adminpanelen under ordrar (för feedback). */
+function setOrdersStatus(msg) {
+    if (adminOrdersStatusEl) adminOrdersStatusEl.textContent = msg;
+}
+
+/** Standardfelvisning i adminpanelen. */
+function showAdminError(err) {
+    console.error(err);
+    alert(err?.message || String(err));
+    setAdminStatus(err?.message || "Något gick fel.");
+}
+
+/**
+ * Bygger en scrollbar lista med checkboxar för kategorier.
+ * Vi återanvänder samma kategoridata som meny-listan på kundsidan.
+ */
+function renderAdminCategories() {
+    if (!adminCategoriesEl) return;
+
+    adminCategoriesEl.innerHTML = "";
+
+    for (const c of categories) {
+        const label = document.createElement("label");
+        label.className = "admin-cat";
+
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.value = String(c.id);
+        cb.dataset.categoryId = String(c.id);
+
+        const text = document.createElement("span");
+        text.textContent = `${c.name} (#${c.id})`;
+
+        label.appendChild(cb);
+        label.appendChild(text);
+        adminCategoriesEl.appendChild(label);
+    }
+}
+
+/** Hämtar valda category_id från checkbox-listan. */
+function getSelectedCategoryIds() {
+    if (!adminCategoriesEl) return [];
+    return Array.from(
+        adminCategoriesEl.querySelectorAll("input[type='checkbox']:checked"),
+    )
+        .map((cb) => Number(cb.value))
+        .filter((n) => Number.isFinite(n));
+}
+
+/** Avmarkerar alla kategorier. */
+function clearSelectedCategories() {
+    if (!adminCategoriesEl) return;
+    adminCategoriesEl
+        .querySelectorAll("input[type='checkbox']")
+        .forEach((cb) => {
+            cb.checked = false;
+        });
+}
+
+/** Rensar adminformuläret. */
+function clearAdminForm() {
+    if (adminProductIdEl) adminProductIdEl.value = "";
+    if (adminProductNameEl) adminProductNameEl.value = "";
+    if (adminProductDescEl) adminProductDescEl.value = "";
+    if (adminProductPriceEl) adminProductPriceEl.value = "";
+    if (adminProductSkuEl) adminProductSkuEl.value = "";
+    if (adminProductStockEl) adminProductStockEl.value = "";
+    if (adminProductEolEl) adminProductEolEl.value = "";
+    clearSelectedCategories();
+}
+
+/**
+ * Skapar en produkt via POST /admin/products baserat på formuläret.
+ * Vi skickar även categories: [id, id, ...] så produkten kopplas till kategorier.
+ */
+async function createProductFromForm() {
+    const body = {
+        product_name: adminProductNameEl?.value?.trim(),
+        product_description: adminProductDescEl?.value?.trim() || null,
+        price: Number(adminProductPriceEl?.value),
+        sku: adminProductSkuEl?.value?.trim(),
+        stock_quantity: Number(adminProductStockEl?.value),
+        categories: getSelectedCategoryIds(),
+    };
+
+    // Minimal validering
+    if (
+        !body.product_name ||
+        !body.sku ||
+        !Number.isFinite(body.price) ||
+        !Number.isFinite(body.stock_quantity)
+    ) {
+        throw new Error("Fyll i namn, SKU, pris och lagersaldo.");
+    }
+
+    setAdminStatus("Skapar produkt…");
+
+    const res = await apiPost("/admin/products", body);
+
+    setAdminStatus(`Produkt skapad (id: ${res?.product_id ?? "?"}).`);
+    clearAdminForm();
+    await loadAdminProducts();
+}
+
+/**
+ * Uppdaterar en produkt via PATCH /admin/products/:id.
+ * PATCH uppdaterar bara de fält vi skickar med.
+ * Vi skickar även categories (om någon kategori valts) för att uppdatera kopplingarna.
+ */
+async function updateProductFromForm() {
+    const id = Number(adminProductIdEl?.value);
+    if (!Number.isFinite(id))
+        throw new Error("Ange Produkt-ID för att uppdatera.");
+
+    const body = {};
+
+    const name = adminProductNameEl?.value?.trim();
+    if (name) body.product_name = name;
+
+    const desc = adminProductDescEl?.value?.trim();
+    if (desc !== undefined) body.product_description = desc || null;
+
+    const price = adminProductPriceEl?.value;
+    if (price !== "" && price !== undefined) body.price = Number(price);
+
+    const sku = adminProductSkuEl?.value?.trim();
+    if (sku) body.sku = sku;
+
+    const stock = adminProductStockEl?.value;
+    if (stock !== "" && stock !== undefined)
+        body.stock_quantity = Number(stock);
+
+    // is_eol: tomt => skicka inte (då lämnas fältet oförändrat)
+    const eol = adminProductEolEl?.value;
+    if (eol === "0" || eol === "1") body.is_eol = Number(eol);
+
+    // Kategorier: vi skickar alltid den valda listan (tom lista betyder “ta bort alla”)
+    body.categories = getSelectedCategoryIds();
+
+    setAdminStatus("Uppdaterar produkt…");
+    await apiPatch(`/admin/products/${id}`, body);
+
+    setAdminStatus("Produkt uppdaterad.");
+    await loadAdminProducts();
+}
+
+/**
+ * Hämtar alla produkter (GET /products) och visar dem i en tabell.
+ * (Vi använder den publika listan för att slippa bygga en extra admin-endpoint.)
+ */
+async function loadAdminProducts() {
+    if (!adminProductsTbody) return;
+
+    adminProductsTbody.innerHTML = `<tr><td colspan="6">Laddar…</td></tr>`;
+
+    const products = await apiGet("/products");
+
+    if (!Array.isArray(products) || products.length === 0) {
+        adminProductsTbody.innerHTML = `<tr><td colspan="6">Inga produkter.</td></tr>`;
+        return;
+    }
+
+    adminProductsTbody.innerHTML = "";
+
+    for (const p of products) {
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${p.id}</td>
+            <td>${p.product_name ?? ""}</td>
+            <td>${p.sku ?? ""}</td>
+            <td>${p.price ?? ""}</td>
+            <td>${p.stock_quantity ?? ""}</td>
+            <td>
+                <div class="admin-row-actions">
+                    <button class="btn btn-ghost" type="button" data-admin-action="edit" data-id="${p.id}">Redigera</button>
+                    <button class="btn btn-ghost" type="button" data-admin-action="delete" data-id="${p.id}">Ta bort</button>
+                </div>
+            </td>
+        `;
+
+        adminProductsTbody.appendChild(tr);
+    }
+
+    // Koppla actions (delegation inom tabellen)
+    adminProductsTbody
+        .querySelectorAll("button[data-admin-action]")
+        .forEach((btn) => {
+            btn.addEventListener("click", async () => {
+                const action = btn.dataset.adminAction;
+                const id = Number(btn.dataset.id);
+                if (!Number.isFinite(id)) return;
+
+                if (action === "delete") {
+                    const ok = confirm(`Ta bort produkt #${id}?`);
+                    if (!ok) return;
+
+                    setAdminStatus("Tar bort produkt…");
+                    await apiDelete(`/admin/products/${id}`);
+                    setAdminStatus("Produkt borttagen.");
+                    await loadAdminProducts();
+                    return;
+                }
+
+                if (action === "edit") {
+                    await loadProductIntoAdminForm(id);
+                    return;
+                }
+            });
+        });
+}
+
+/**
+ * Hämtar en produkt och fyller i admin-formuläret så att man kan PATCH:a.
+ * OBS: För att kunna för-markera kategorier behöver backend returnera category_id-lista.
+ * Om backend bara skickar kategorinamn som text, kan vi inte säkert mappa tillbaka till id.
+ */
+async function loadProductIntoAdminForm(productId) {
+    setAdminStatus(`Hämtar produkt #${productId}…`);
+
+    const product = await apiGet(`/products/${productId}`);
+
+    if (adminProductIdEl) adminProductIdEl.value = String(productId);
+    if (adminProductNameEl)
+        adminProductNameEl.value = product.product_name ?? "";
+    if (adminProductDescEl)
+        adminProductDescEl.value = product.product_description ?? "";
+    if (adminProductPriceEl) adminProductPriceEl.value = product.price ?? "";
+    if (adminProductSkuEl) adminProductSkuEl.value = product.sku ?? "";
+    if (adminProductStockEl)
+        adminProductStockEl.value = product.stock_quantity ?? "";
+    if (adminProductEolEl) adminProductEolEl.value = "";
+
+    // Vi rensar kategori-valen (kan inte förfylla säkert utan category_id-lista)
+    clearSelectedCategories();
+
+    setAdminStatus(
+        "Produkt inläst. Välj kategorier och tryck Uppdatera (PATCH).",
+    );
+}
+
+/**
+ * Hämtar admin-ordrar (GET /admin/orders) och renderar tabell.
+ */
+async function loadAdminOrders() {
+    if (!adminOrdersTbody) return;
+
+    adminOrdersTbody.innerHTML = `<tr><td colspan="4">Laddar…</td></tr>`;
+
+    const orders = await apiGet("/admin/orders");
+
+    if (!Array.isArray(orders) || orders.length === 0) {
+        adminOrdersTbody.innerHTML = `<tr><td colspan="4">Inga ordrar hittades.</td></tr>`;
+        return;
+    }
+
+    adminOrdersTbody.innerHTML = "";
+
+    for (const o of orders) {
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${o.ordernummer ?? ""}</td>
+            <td>${o.kund ?? ""}</td>
+            <td>${o.orderdatum ?? ""}</td>
+            <td>${o.totalsumma ?? ""}</td>
+        `;
+
+        adminOrdersTbody.appendChild(tr);
+    }
+
+    setOrdersStatus(`Hämtade ${orders.length} ordrar.`);
+}
