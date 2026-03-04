@@ -448,12 +448,19 @@ async function openProductDetails(productId) {
     try {
         currentModalProductId = productId;
 
+        // Koppla modalens "Lägg i kundvagn"-knapp till samma click-handler (data-action)
+        // Så att den får samma ✔-feedback som produktkorten.
+        if (modalAddToCartBtn) {
+            modalAddToCartBtn.dataset.id = String(productId); // VIKTIGT: måste vara numeriskt
+        }
+
         // Hämta full produktinfo från backend
         const product = await apiGet(`/products/${productId}`);
 
         if (modalTitle)
             modalTitle.textContent = product.product_name ?? "Produkt";
         if (modalPrice) modalPrice.textContent = formatPriceSEK(product.price);
+
         if (modalDesc) {
             modalDesc.textContent =
                 product.product_description ?? "Ingen beskrivning.";
@@ -483,14 +490,14 @@ async function openProductDetails(productId) {
  * Kopplar modal-knappen "Lägg i kundvagn" till aktuell produkt i modalen.
  * Vi använder currentModalProductId för att veta vilken produkt som visas.
  */
-function initModalAddToCart() {
+/* function initModalAddToCart() {
     modalAddToCartBtn?.addEventListener("click", () => {
         if (!currentModalProductId) return;
         addToCart(currentModalProductId, 1).catch(console.error);
     });
 }
 
-document.addEventListener("DOMContentLoaded", initModalAddToCart);
+document.addEventListener("DOMContentLoaded", initModalAddToCart); */
 
 // =========================
 // KUNDVAGN (API + rendering)

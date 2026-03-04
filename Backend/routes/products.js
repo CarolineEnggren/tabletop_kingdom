@@ -86,41 +86,6 @@ router.get("/category/:id", (req, res) => {
 
 /**Userstory:
  * ++ #4 Som kund vill jag kunna se om en produkt finns i lager
- *
- * GET /products/:id/stock
- * Returnerar lagersaldo + enkel boolean (lagerstatus).
- */
-router.get("/:id/stock", (req, res) => {
-    const id = req.params.id;
-
-    const sql = `
-        SELECT 
-            product_name,
-            stock_quantity
-        FROM products
-        WHERE id = ?
-    `;
-
-    db.query(sql, [id], (err, results) => {
-        if (err) return res.status(500).send(err);
-
-        if (results.length === 0) {
-            return res
-                .status(404)
-                .send({ message: "Produkten hittades inte." });
-        }
-
-        const product = results[0];
-
-        res.send({
-            produkt: product.product_name,
-            lagersaldo: product.stock_quantity,
-            lagerstatus: product.stock_quantity > 0,
-        });
-    });
-});
-
-/**Userstory:
  * #5 Som kund vill jag kunna se detaljerad information om en enskild produkt så att jag kan fatta köpbeslut
  *
  * GET /products/:id

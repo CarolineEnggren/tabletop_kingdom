@@ -779,7 +779,7 @@ textarea,
     margin-top: 4px;
     font-size: 11px;
     text-transform: uppercase;
-    transform: translateY(6px);
+    transform: translateY(4px);
 }
 
 .modal__badge {
@@ -801,11 +801,14 @@ textarea,
     color: rgba(0, 0, 0, 0.75);
 }
 
-.modal__actions {
+#modalAddToCart {
     margin-top: 18px;
+    width: 100%;
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
 }
 
 [hidden] {
