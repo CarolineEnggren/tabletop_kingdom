@@ -8,10 +8,17 @@ const db = require("../database");
  * POST /admin/products
  * Skapar (INSERT) en ny produkt i databasen.
  * Förväntar sig att frontend skickar ett JSON-body med produktens fält.
+ * Om kategorier skickas med så läggs även relationer i categories_products-tabellen.
  */
 router.post("/products", (req, res) => {
-    const { product_name, product_description, price, sku, stock_quantity } =
-        req.body;
+    const {
+        product_name,
+        product_description,
+        price,
+        sku,
+        stock_quantity,
+        categories = [],
+    } = req.body;
 
     const sql =
         "INSERT INTO products (product_name, product_description, price, sku, stock_quantity) VALUES (?, ?, ?, ?, ?)";
@@ -22,10 +29,30 @@ router.post("/products", (req, res) => {
         (err, result) => {
             if (err) return res.status(500).json(err);
 
-            res.status(201).json({
-                message: "Produkt tillagd!",
-                product_id: result.insertId, // id som MySQL skapade
-            });
+            const productId = result.insertId;
+
+            if (!Array.isArray(categories) || categories.length === 0) {
+                return res.status(201).json({
+                    message: "Produkt tillagd!",
+                    product_id: productId,
+                });
+            }
+
+            // Matcha tabellens kolumnordning: categories_id, products_id
+            const values = categories.map((catId) => [catId, productId]);
+
+            db.query(
+                "INSERT INTO categories_products (categories_id, products_id) VALUES ?",
+                [values],
+                (err2) => {
+                    if (err2) return res.status(500).json(err2);
+
+                    res.status(201).json({
+                        message: "Produkt tillagd med kategorier!",
+                        product_id: productId,
+                    });
+                },
+            );
         },
     );
 });
@@ -38,14 +65,18 @@ router.post("/products", (req, res) => {
  *
  * PATCH betyder "uppdatera delvis" (till skillnad från PUT som uppdaterar hela resursen).
  * Vi bygger därför en UPDATE-sats dynamiskt och tar bara med de fält som faktiskt skickats in i requesten.
+ *
+ * Om kategorier skickas med så uppdateras även relationerna i categories_products-tabellen (gamla tas bort, nya läggs till).
  */
 router.patch("/products/:id", (req, res) => {
     const id = req.params.id;
 
-    const updates = []; // SQL-delar, t.ex. "price = ?"
-    const values = []; // Värden som ska ersätta frågetecknen
+    const updates = [];
+    const values = [];
 
-    // För varje fält: om det finns med i body så lägger vi till det i UPDATE.
+    const { categories } = req.body;
+
+    // Bygg UPDATE dynamiskt
     if (req.body.product_name !== undefined) {
         updates.push("product_name = ?");
         values.push(req.body.product_name);
@@ -76,23 +107,26 @@ router.patch("/products/:id", (req, res) => {
         values.push(req.body.is_eol);
     }
 
-    // Om inget fält skickades in finns inget att uppdatera.
-    if (updates.length === 0) {
+    // Om inget produktfält skickades men categories finns → vi tillåter det ändå
+    if (updates.length === 0 && categories === undefined) {
         return res.status(400).json({ message: "Inga fält att uppdatera." });
     }
 
-    // Exempel: updates = ["price = ?", "stock_quantity = ?"]
-    // updates.join(", ") => "price = ?, stock_quantity = ?"
-    const sql = `
-        UPDATE products
-        SET ${updates.join(", ")}
-        WHERE id = ?
-    `;
+    const updateProduct = (callback) => {
+        if (updates.length === 0) return callback(null, { affectedRows: 1 });
 
-    // Sista ? i SQL är id
-    values.push(id);
+        const sql = `
+            UPDATE products
+            SET ${updates.join(", ")}
+            WHERE id = ?
+        `;
 
-    db.query(sql, values, (err, result) => {
+        values.push(id);
+
+        db.query(sql, values, callback);
+    };
+
+    updateProduct((err, result) => {
         if (err) return res.status(500).json(err);
 
         if (result.affectedRows === 0) {
@@ -101,7 +135,39 @@ router.patch("/products/:id", (req, res) => {
                 .send({ message: "Produkten hittades inte." });
         }
 
-        res.send({ message: "Produkt uppdaterad!" });
+        // Om categories inte skickas → klart
+        if (categories === undefined) {
+            return res.send({ message: "Produkt uppdaterad!" });
+        }
+
+        // Ta bort gamla kategorikopplingar
+        db.query(
+            "DELETE FROM categories_products WHERE products_id = ?",
+            [id],
+            (err2) => {
+                if (err2) return res.status(500).json(err2);
+
+                // Om tom array → produkten har inga kategorier
+                if (!Array.isArray(categories) || categories.length === 0) {
+                    return res.send({ message: "Produkt uppdaterad!" });
+                }
+
+                // Lägg in nya kopplingar
+                const values = categories.map((catId) => [catId, id]);
+
+                db.query(
+                    "INSERT INTO categories_products (categories_id, products_id) VALUES ?",
+                    [values],
+                    (err3) => {
+                        if (err3) return res.status(500).json(err3);
+
+                        res.send({
+                            message: "Produkt och kategorier uppdaterade!",
+                        });
+                    },
+                );
+            },
+        );
     });
 });
 
@@ -110,6 +176,8 @@ router.patch("/products/:id", (req, res) => {
  *
  * DELETE /admin/products/:id
  * Tar bort en produkt från databasen.
+ *
+ * categories_products har ON DELETE CASCADE mot products, så kopplingarna tas bort automatiskt när produkten raderas.
  */
 router.delete("/products/:id", (req, res) => {
     const id = req.params.id;
