@@ -1,7 +1,3 @@
-/*
- * app.js (frontend)
- */
-
 // ====== DOM-REFERENSER (saker vi klickar på / skriver i) ======
 const searchInput = document.getElementById("searchInput");
 const searchBtn = document.querySelector(".search-btn");

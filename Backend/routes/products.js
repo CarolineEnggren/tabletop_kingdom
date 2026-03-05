@@ -35,12 +35,13 @@ router.get("/search", (req, res) => {
         SELECT id, product_name, price, sku, stock_quantity
         FROM products
         WHERE product_name LIKE CONCAT('%', ?, '%')
+        OR sku LIKE CONCAT('%', ?, '%') 
         ORDER BY product_name LIKE CONCAT(?, '%') DESC,
                  product_name
         LIMIT 100
     `;
 
-    db.query(sql, [search, search], (err, rows) => {
+    db.query(sql, [search, search, search], (err, rows) => {
         if (err) {
             return res.status(500).json({ error: "Database error" });
         }

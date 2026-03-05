@@ -534,31 +534,6 @@ textarea,
     gap: 16px;
 }
 
-/* Responsive: färre kolumner på mindre skärmar */
-@media (max-width: 1200px) {
-    /* Styles for: #productList */
-    #productList {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-}
-@media (max-width: 980px) {
-    /* Styles for: #productList */
-    #productList {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-}
-@media (max-width: 720px) {
-    /* Styles for: #productList */
-    #productList {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-@media (max-width: 460px) {
-    /* Styles for: #productList */
-    #productList {
-        grid-template-columns: 1fr;
-    }
-}
 
 /* --- Product card --- */
 .product-card {
@@ -827,7 +802,6 @@ footer {
    Admin view (dashboard)
    ========================= */
 
-/* Styles for: .admin-page */
 .admin-page {
     max-width: 1500px;
     margin: 0 auto;
@@ -837,14 +811,12 @@ footer {
     color: #222;
 }
 
-/* Styles for: .admin-title */
 .admin-title {
     text-align: center;
     color: var(--red-darker);
     margin-top: 0;
 }
 
-/* Styles for: .admin-grid */
 .admin-grid {
     display: grid;
     grid-template-columns: 1.1fr 0.9fr;
@@ -852,7 +824,6 @@ footer {
     align-items: start;
 }
 
-/* Styles for: .admin-card */
 .admin-card {
     background: white;
     border: 1px solid rgba(0, 0, 0, 0.12);
@@ -861,7 +832,6 @@ footer {
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
 }
 
-/* Styles for: .admin-card__head */
 .admin-card__head {
     display: flex;
     align-items: center;
@@ -873,37 +843,31 @@ footer {
     height: 752px;
 }
 
-/* Styles for: .admin-card--full */
 .admin-card--full {
     grid-column: 1 / -1;
 }
 
-/* Styles for: .admin-form */
 .admin-form {
     display: grid;
     gap: 12px;
 }
 
-/* Styles for: .admin-form__row */
 .admin-form__row {
     display: grid;
     gap: 6px;
 }
 
-/* Styles for: .admin-form__row--2 */
 .admin-form__row--2 {
     grid-template-columns: 1fr 1fr;
     gap: 12px;
 }
 
-/* Styles for: .admin-label */
 .admin-label {
     font-weight: 900;
     font-family: var(--font-ui);
     color: rgba(0, 0, 0, 0.7);
 }
 
-/* Styles for: .admin-input */
 .admin-input {
     width: 100%;
     padding: 10px;
@@ -912,7 +876,6 @@ footer {
     font-family: var(--font-ui);
 }
 
-/* Styles for: .admin-textarea */
 .admin-textarea {
     width: 100%;
     padding: 10px;
@@ -922,7 +885,6 @@ footer {
     resize: vertical;
 }
 
-/* Styles for: .admin-select */
 .admin-select {
     width: 100%;
     padding: 10px;
@@ -932,7 +894,6 @@ footer {
     background: white;
 }
 
-/* Styles for: .admin-hint */
 .admin-hint {
     margin: 0;
     font-size: 12px;
@@ -940,7 +901,6 @@ footer {
     font-family: var(--font-ui);
 }
 
-/* Styles for: .admin-categories */
 .admin-categories {
     max-height: 160px;
     overflow: auto;
@@ -952,7 +912,6 @@ footer {
     background: rgba(0, 0, 0, 0.03);
 }
 
-/* Styles for: .admin-cat */
 .admin-cat {
     display: flex;
     align-items: center;
@@ -964,24 +923,20 @@ footer {
     font-family: var(--font-ui);
 }
 
-/* Styles for: .admin-cat:hover */
 .admin-cat:hover {
     background: rgba(255, 255, 255, 1);
 }
 
-/* Styles for: .admin-actions */
 .admin-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
 }
 
-/* Styles for: #adminClearBtn */
 #adminClearBtn {
     grid-column: 1 / -1;
 }
 
-/* Styles for: .admin-status */
 .admin-status {
     margin: 0;
     font-family: var(--font-ui);
@@ -990,7 +945,6 @@ footer {
     min-height: 18px;
 }
 
-/* Styles for: .admin-table-wrap */
 .admin-table-wrap {
     max-height: 752px;
     overflow: auto;
@@ -998,7 +952,6 @@ footer {
     border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
-/* Styles for: .admin-table */
 .admin-table {
     width: 100%;
     border-collapse: collapse;
@@ -1006,7 +959,6 @@ footer {
     font-size: 13px;
 }
 
-/* Styles for: .admin-table th */
 .admin-table th {
     position: sticky;
     top: 0;
@@ -1017,14 +969,12 @@ footer {
     font-weight: 900;
 }
 
-/* Styles for: .admin-table td */
 .admin-table td {
     padding: 10px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.08);
     vertical-align: top;
 }
 
-/* Styles for: .admin-table .admin-row-actions */
 .admin-row-actions {
     display: flex;
     gap: 8px;
@@ -1036,12 +986,4 @@ footer {
     justify-content: flex-end;
     margin-top: 12px;
 }
-/* Responsive for admin grid */
-@media (max-width: 980px) {
-    .admin-grid {
-        grid-template-columns: 1fr;
-    }
-    .admin-actions {
-        grid-template-columns: 1fr;
-    }
-}
+

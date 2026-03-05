@@ -107,7 +107,7 @@ router.patch("/products/:id", (req, res) => {
         values.push(req.body.is_eol);
     }
 
-    // Om inget produktfält skickades men categories finns → vi tillåter det ändå
+    // Om inget produktfält skickades men categories finns tillåter vi det ändå
     if (updates.length === 0 && categories === undefined) {
         return res.status(400).json({ message: "Inga fält att uppdatera." });
     }
@@ -135,7 +135,7 @@ router.patch("/products/:id", (req, res) => {
                 .send({ message: "Produkten hittades inte." });
         }
 
-        // Om categories inte skickas → klart
+        // Respons om kategorin inte uppdaterats
         if (categories === undefined) {
             return res.send({ message: "Produkt uppdaterad!" });
         }
@@ -147,7 +147,7 @@ router.patch("/products/:id", (req, res) => {
             (err2) => {
                 if (err2) return res.status(500).json(err2);
 
-                // Om tom array → produkten har inga kategorier
+                // Om array är tom så har produkten inga kategorier
                 if (!Array.isArray(categories) || categories.length === 0) {
                     return res.send({ message: "Produkt uppdaterad!" });
                 }
@@ -201,7 +201,8 @@ router.delete("/products/:id", (req, res) => {
  * #14 Som admin vill jag kunna se alla ordrar så att jag kan hantera verksamheten
  *
  * GET /admin/orders
- * Hämtar alla ordrar (med kundnamn) så admin kan se verksamheten.
+ * 
+ * Vi slår ihop first_name och last_name till en sträng med concat
  */
 router.get("/orders", (req, res) => {
     const sql = `
