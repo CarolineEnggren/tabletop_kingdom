@@ -117,7 +117,7 @@ router.post("/", (req, res) => {
                         (err3) => {
                             if (err3) return res.status(500).send(err3);
 
-                            // Klart
+                            
                             res.status(201).send({
                                 message: "Order skapad!",
                                 order_id: orderId,
